@@ -144,7 +144,7 @@ export default function Communities() {
           onOk={() => form.submit()}
           okText="保存"
           cancelText="取消"
-          destroyOnHidden
+          forceRender
         >
           <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 16 }}>
             <Form.Item

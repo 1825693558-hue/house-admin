@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Modal, Form, Input, List, Space, Spin } from 'antd'
+import { Card, Button, Modal, Form, Input, Table, Space, Spin } from 'antd'
 import { App } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, HolderOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import type { ColumnsType } from 'antd/es/table'
 import { getAppliances, createAppliance, updateAppliance, deleteAppliance } from '../api/appliance'
 import type { ApplianceItem } from '../api/appliance'
 
@@ -88,34 +89,44 @@ export default function Appliances() {
           </Button>
         </div>
         <Card>
-          <List
+          <Table
             dataSource={data}
-            renderItem={(item) => (
-              <List.Item
-                style={{
-                  borderBottom: '1px solid #f0f0f0',
-                  padding: '16px 20px',
-                  background: '#fff',
-                  borderRadius: 8,
-                  marginBottom: 4,
-                }}
-                actions={[
-                  <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(item)}>
-                    编辑
-                  </Button>,
-                  <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(item)}>
-                    删除
-                  </Button>,
-                ]}
-              >
-                <Space size={16}>
-                  <HolderOutlined style={{ color: '#9ca3af', fontSize: 16 }} />
-                  <span style={{ fontSize: 20 }}>{item.icon || '📦'}</span>
-                  <span style={{ fontWeight: 600, fontSize: 15 }}>{item.name}</span>
-                  <span style={{ color: '#9ca3af', fontSize: 13 }}>排序: {item.sort_order}</span>
-                </Space>
-              </List.Item>
-            )}
+            rowKey="id"
+            pagination={false}
+            columns={[
+              {
+                title: '图标',
+                dataIndex: 'icon',
+                width: 80,
+                render: (icon: string) => <span style={{ fontSize: 20 }}>{icon || '📦'}</span>,
+              },
+              {
+                title: '名称',
+                dataIndex: 'name',
+                render: (name: string) => <span style={{ fontWeight: 600, fontSize: 15 }}>{name}</span>,
+              },
+              {
+                title: '排序',
+                dataIndex: 'sort_order',
+                width: 100,
+                render: (sort: number) => <span style={{ color: '#9ca3af', fontSize: 13 }}>{sort}</span>,
+              },
+              {
+                title: '操作',
+                key: 'action',
+                width: 160,
+                render: (_: unknown, record: ApplianceItem) => (
+                  <Space>
+                    <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+                      编辑
+                    </Button>
+                    <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
+                      删除
+                    </Button>
+                  </Space>
+                ),
+              },
+            ] as ColumnsType<ApplianceItem>}
           />
         </Card>
 
@@ -126,7 +137,7 @@ export default function Appliances() {
           onOk={() => form.submit()}
           okText="保存"
           cancelText="取消"
-          destroyOnHidden
+          forceRender
         >
           <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 16 }}>
             <Form.Item
