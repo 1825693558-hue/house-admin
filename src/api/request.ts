@@ -9,8 +9,15 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 // 导出配置供外部使用
 export { BASE_URL, USE_MOCK }
 
+/** 后端统一响应结构 */
+interface ApiResponse<T = unknown> {
+  code: number
+  msg: string
+  data: T
+}
+
 /**
- * 由于响应拦截器直接返回 response.data，
+ * 由于响应拦截器提取 response.data.data，
  * 所有请求方法的真实返回类型是 Promise<T>（业务数据），而非 Promise<AxiosResponse<T>>。
  * 这里通过接口重新声明方法签名，使 TypeScript 类型与运行时行为一致。
  */
@@ -42,17 +49,38 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// 响应拦截器：RESTful 风格，直接返回 response.data
+// 响应拦截器：统一提取 {code, msg, data} 中的 data
 instance.interceptors.response.use(
-  (response) => response.data,
+  (response): any => {
+    const payload = response.data as ApiResponse
+
+    // 401 未授权
+    if (response.status === 401) {
+      removeToken()
+      navigateTo('/login')
+      return Promise.reject(new Error(payload?.msg || '登录已过期，请重新登录'))
+    }
+
+    // 业务错误（HTTP 2xx 但 code 不为 200）
+    if (payload && typeof payload.code === 'number' && payload.code !== 200) {
+      return Promise.reject(new Error(payload.msg || '请求失败'))
+    }
+
+    // 正常返回：提取 data 字段
+    return payload?.data
+  },
   (error) => {
     if (error.response?.status === 401) {
       removeToken()
       navigateTo('/login')
-      return Promise.reject(new Error('登录已过期，请重新登录'))
+      const payload = error.response?.data as ApiResponse | undefined
+      return Promise.reject(new Error(payload?.msg || '登录已过期，请重新登录'))
     }
-    // 优先取后端返回的错误信息，降级取 HTTP 状态描述
+
+    // 优先取后端统一返回的 msg，降级取 HTTP 状态描述
+    const payload = error.response?.data as ApiResponse | undefined
     const msg: string =
+      payload?.msg ||
       error.response?.data?.detail ||
       error.response?.data?.message ||
       error.response?.data?.error ||
