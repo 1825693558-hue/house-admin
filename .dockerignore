@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.cache/
+.vite/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 环境变量（构建时通过 --build-arg 传入）
+.env
+.env.local
+.env.*.local
+
+# 日志
+*.log
+npm-debug.log*
