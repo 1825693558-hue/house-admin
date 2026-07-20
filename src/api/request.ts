@@ -3,7 +3,9 @@ import { getToken, removeToken } from '../utils/auth'
 import { navigateTo } from '../utils/navigate'
 
 // 从环境变量读取配置
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// 空字符串表示使用相对路径（同域名部署，由 Nginx 代理到后端）
+const envBase = import.meta.env.VITE_API_BASE_URL
+const BASE_URL = envBase !== undefined && envBase !== null ? envBase : 'http://localhost:8000'
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 // 导出配置供外部使用
