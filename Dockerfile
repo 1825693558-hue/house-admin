@@ -15,9 +15,9 @@ ARG VITE_USE_MOCK=false
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_USE_MOCK=${VITE_USE_MOCK}
 
-# 安装依赖
-COPY package*.json ./
-RUN npm ci
+# 安装依赖（删除 lock 文件重新安装，避免 Windows 生成的 lock 在 Linux 下不兼容）
+COPY package.json ./
+RUN npm install
 
 # 复制源码并构建
 COPY . .
