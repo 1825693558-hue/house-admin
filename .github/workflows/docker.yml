@@ -36,7 +36,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/ai-house-admin:latest
             ${{ secrets.DOCKER_USERNAME }}/ai-house-admin:${{ github.sha }}
           build-args: |
-            VITE_API_BASE_URL=""
+            VITE_API_BASE_URL=
             VITE_USE_MOCK=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
