@@ -2,7 +2,6 @@ import request from './request'
 
 export interface HouseItem {
   id: number
-  title: string
   community_id: number | null
   community_name: string | null
   address: string | null
@@ -10,6 +9,9 @@ export interface HouseItem {
   floor: number | null
   total_floors: number | null
   price: number | null
+  sale_price: number | null
+  rent_price: number | null
+  price_note: string | null
   status: string
   house_type: string | null
   decoration: string | null
@@ -22,7 +24,6 @@ export interface HouseItem {
 
 export interface HouseDetail {
   id: number
-  title: string
   community_id: number | null
   community: { id: number; name: string } | null
   address: string | null
@@ -30,6 +31,9 @@ export interface HouseDetail {
   floor: number | null
   total_floors: number | null
   price: number | null
+  sale_price: number | null
+  rent_price: number | null
+  price_note: string | null
   status: string
   house_type: string | null
   decoration: string | null
@@ -92,13 +96,15 @@ export interface HouseApplianceInput {
 
 /** 创建/更新房源的请求体 */
 export interface HouseWriteData {
-  title: string
   community_id?: number | null
   address?: string | null
   area?: number | null
   floor?: number | null
   total_floors?: number | null
   price?: number | null
+  sale_price?: number | null
+  rent_price?: number | null
+  price_note?: string | null
   status?: string
   house_type?: string | null
   decoration?: string | null

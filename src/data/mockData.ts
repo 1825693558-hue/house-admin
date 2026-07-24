@@ -22,11 +22,11 @@ export const mockStatusDistribution: StatusDistributionItem[] = [
 ]
 
 export const mockRecentHouses: House[] = [
-  { id: 1001, title: '阳光花园 3室2厅 南北通透', community: '阳光花园', area: 128, price: 385, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-15' },
-  { id: 1002, title: '万科城 2室1厅 精装修', community: '万科城', area: 89, price: 210, status: '在售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-14' },
-  { id: 1003, title: '龙湖天街 4室2厅 豪装', community: '龙湖天街', area: 156, price: 520, status: '出租中', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-13' },
-  { id: 1004, title: '中海国际 1室1厅 拎包入住', community: '中海国际', area: 56, price: 120, status: '在售', decoration: '简装', keyType: '临时密码', createdAt: '2026-07-12' },
-  { id: 1005, title: '保利心语 3室2厅 江景房', community: '保利心语', area: 142, price: 460, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-11' },
+  { id: 1001, community: '阳光花园', area: 128, price: 385, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-15' },
+  { id: 1002, community: '万科城', area: 89, price: 210, status: '在售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-14' },
+  { id: 1003, community: '龙湖天街', area: 156, price: 520, status: '出租中', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-13' },
+  { id: 1004, community: '中海国际', area: 56, price: 120, status: '在售', decoration: '简装', keyType: '临时密码', createdAt: '2026-07-12' },
+  { id: 1005, community: '保利心语', area: 142, price: 460, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-11' },
 ]
 
 export const mockCommunities: Community[] = [
@@ -59,14 +59,14 @@ export const mockUsers: User[] = [
 ]
 
 export const mockHouses: House[] = [
-  { id: 1001, title: '阳光花园 3室2厅 南北通透', community: '阳光花园', area: 128, price: 385, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-15' },
-  { id: 1002, title: '万科城 2室1厅 精装修', community: '万科城', area: 89, price: 210, status: '在售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-14' },
-  { id: 1003, title: '龙湖天街 4室2厅 豪装', community: '龙湖天街', area: 156, price: 520, status: '出租中', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-13' },
-  { id: 1004, title: '中海国际 1室1厅 拎包入住', community: '中海国际', area: 56, price: 120, status: '在售', decoration: '简装', keyType: '临时密码', createdAt: '2026-07-12' },
-  { id: 1005, title: '保利心语 3室2厅 江景房', community: '保利心语', area: 142, price: 460, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-11' },
-  { id: 1006, title: '华润悦府 2室2厅 现代简约', community: '华润悦府', area: 96, price: 268, status: '出租中', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-10' },
-  { id: 1007, title: '绿地中心 5室3厅 复式', community: '绿地中心', area: 210, price: 780, status: '在售', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-09' },
-  { id: 1008, title: '阳光花园 1室1厅 单身公寓', community: '阳光花园', area: 48, price: 98, status: '已租', decoration: '简装', keyType: '钥匙在店', createdAt: '2026-07-08' },
-  { id: 1009, title: '万科城 3室1厅 学区房', community: '万科城', area: 108, price: 325, status: '已售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-07' },
-  { id: 1010, title: '龙湖天街 2室2厅 拎包入住', community: '龙湖天街', area: 92, price: 245, status: '下架', decoration: '毛坯', keyType: '临时密码', createdAt: '2026-07-06' },
+  { id: 1001, community: '阳光花园', area: 128, price: 385, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-15' },
+  { id: 1002, community: '万科城', area: 89, price: 210, status: '在售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-14' },
+  { id: 1003, community: '龙湖天街', area: 156, price: 520, status: '出租中', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-13' },
+  { id: 1004, community: '中海国际', area: 56, price: 120, status: '在售', decoration: '简装', keyType: '临时密码', createdAt: '2026-07-12' },
+  { id: 1005, community: '保利心语', area: 142, price: 460, status: '在售', decoration: '精装', keyType: '钥匙在店', createdAt: '2026-07-11' },
+  { id: 1006, community: '华润悦府', area: 96, price: 268, status: '出租中', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-10' },
+  { id: 1007, community: '绿地中心', area: 210, price: 780, status: '在售', decoration: '豪装', keyType: '联系房东', createdAt: '2026-07-09' },
+  { id: 1008, community: '阳光花园', area: 48, price: 98, status: '已租', decoration: '简装', keyType: '钥匙在店', createdAt: '2026-07-08' },
+  { id: 1009, community: '万科城', area: 108, price: 325, status: '已售', decoration: '精装', keyType: '密码锁', createdAt: '2026-07-07' },
+  { id: 1010, community: '龙湖天街', area: 92, price: 245, status: '下架', decoration: '毛坯', keyType: '临时密码', createdAt: '2026-07-06' },
 ]

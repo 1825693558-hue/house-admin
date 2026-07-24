@@ -111,12 +111,11 @@ export default function Dashboard() {
   const columns = [
     { title: '编号', dataIndex: 'id', key: 'id' },
     {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span>,
+      title: '小区',
+      dataIndex: 'community_name',
+      key: 'community_name',
+      render: (text: string) => <span style={{ fontWeight: 600 }}>{text || '-'}</span>,
     },
-    { title: '小区', dataIndex: 'community_name', key: 'community_name' },
     { title: '面积(m²)', dataIndex: 'area', key: 'area' },
     {
       title: '价格(万)',

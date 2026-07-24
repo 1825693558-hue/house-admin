@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, Table, Modal, Form, Select, Tag, Space, Spin } from 'antd'
+import { Card, Button, Input, Table, Modal, Form, Select, Tag, Space, Spin, Popconfirm } from 'antd'
 import { App } from 'antd'
 import { PlusOutlined, SearchOutlined, EditOutlined, KeyOutlined, DeleteOutlined } from '@ant-design/icons'
 import { getUsers, createUser, updateUser, deleteUser } from '../api/user'
@@ -82,23 +82,15 @@ export default function Users() {
     })
   }
 
-  const handleDelete = (record: UserItem) => {
-    modal.confirm({
-      title: '确认删除',
-      content: `确定要删除用户 "${record.nickname || record.username}" 吗？`,
-      okText: '删除',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await deleteUser(record.id)
-          message.success('删除成功')
-          fetchData()
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : '删除失败'
-          message.error(msg)
-        }
-      },
-    })
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteUser(id)
+      message.success('删除成功')
+      fetchData()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '删除失败'
+      message.error(msg)
+    }
   }
 
   const handleSave = async (values: { username: string; nickname: string; role: string; password?: string }) => {
@@ -154,9 +146,17 @@ export default function Users() {
           <Button type="text" size="small" icon={<KeyOutlined />} onClick={() => handleResetPassword(record)}>
             重置密码
           </Button>
-          <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-            删除
-          </Button>
+          <Popconfirm
+            title="确认删除"
+            description={`确定要删除用户 "${record.nickname || record.username}" 吗？`}
+            onConfirm={() => handleDelete(record.id)}
+            okText="删除"
+            cancelText="取消"
+          >
+            <Button type="text" size="small" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },

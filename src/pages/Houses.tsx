@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, Table, Tag, Select, Space, Spin } from 'antd'
+import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm } from 'antd'
 import { App } from 'antd'
-import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons'
-import { getHouses } from '../api/house'
+import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons'
+import { getHouses, deleteHouse } from '../api/house'
 import type { HouseItem } from '../api/house'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
 
@@ -58,22 +58,47 @@ export default function Houses() {
     fetchData()
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteHouse(id)
+      message.success('删除成功')
+      fetchData()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '删除失败'
+      message.error(msg)
+    }
+  }
+
   const columns = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span>,
+      title: '小区',
+      dataIndex: 'community_name',
+      key: 'community_name',
+      render: (text: string) => <span style={{ fontWeight: 600 }}>{text || '-'}</span>,
     },
-    { title: '小区', dataIndex: 'community_name', key: 'community_name' },
+    { title: '地址', dataIndex: 'address', key: 'address' },
     { title: '面积(m²)', dataIndex: 'area', key: 'area', width: 100 },
     {
-      title: '价格(万)',
-      dataIndex: 'price',
-      key: 'price',
-      width: 100,
-      render: (v: number) => <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{v}</span>,
+      title: '出售价(万)',
+      dataIndex: 'sale_price',
+      key: 'sale_price',
+      width: 110,
+      render: (v: number) => <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{v || '-'}</span>,
+    },
+    {
+      title: '出租价(元/月)',
+      dataIndex: 'rent_price',
+      key: 'rent_price',
+      width: 130,
+      render: (v: number) => <span style={{ color: '#2980b9', fontWeight: 600 }}>{v || '-'}</span>,
+    },
+    {
+      title: '价格备注',
+      dataIndex: 'price_note',
+      key: 'price_note',
+      width: 120,
+      render: (v: string) => <span style={{ color: '#6b7280' }}>{v || '-'}</span>,
     },
     {
       title: '状态',
@@ -103,16 +128,29 @@ export default function Houses() {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 150,
       render: (_: unknown, record: HouseItem) => (
-        <Button
-          type="text"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => message.info(`查看房源: ${record.title}`)}
-        >
-          查看
-        </Button>
+        <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => message.info(`查看房源: ${record.community_name || record.id}`)}
+          >
+            查看
+          </Button>
+          <Popconfirm
+            title="确认删除"
+            description="确定要删除该房源吗？"
+            onConfirm={() => handleDelete(record.id)}
+            okText="删除"
+            cancelText="取消"
+          >
+            <Button type="text" size="small" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ]
@@ -123,7 +161,7 @@ export default function Houses() {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <Input
             prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
-            placeholder="搜索房源标题或小区..."
+            placeholder="搜索小区或地址..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 320 }}

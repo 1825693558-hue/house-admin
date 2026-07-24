@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Modal, Form, Input, Table, Space, Spin } from 'antd'
+import { Card, Button, Modal, Form, Input, Table, Space, Spin, Popconfirm } from 'antd'
 import { App } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -12,7 +12,7 @@ export default function Appliances() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<ApplianceItem | null>(null)
   const [form] = Form.useForm()
-  const { message, modal } = App.useApp()
+  const { message } = App.useApp()
 
   const fetchData = async () => {
     setLoading(true)
@@ -43,23 +43,15 @@ export default function Appliances() {
     setModalOpen(true)
   }
 
-  const handleDelete = (record: ApplianceItem) => {
-    modal.confirm({
-      title: '确认删除',
-      content: `确定要删除家电类型 "${record.name}" 吗？`,
-      okText: '删除',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await deleteAppliance(record.id)
-          message.success('删除成功')
-          fetchData()
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : '删除失败'
-          message.error(msg)
-        }
-      },
-    })
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteAppliance(id)
+      message.success('删除成功')
+      fetchData()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '删除失败'
+      message.error(msg)
+    }
   }
 
   const handleSave = async (values: { name: string; icon?: string; sort_order?: number }) => {
@@ -120,9 +112,17 @@ export default function Appliances() {
                     <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
                       编辑
                     </Button>
-                    <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-                      删除
-                    </Button>
+                    <Popconfirm
+                      title="确认删除"
+                      description={`确定要删除家电类型 "${record.name}" 吗？`}
+                      onConfirm={() => handleDelete(record.id)}
+                      okText="删除"
+                      cancelText="取消"
+                    >
+                      <Button type="text" size="small" danger icon={<DeleteOutlined />}>
+                        删除
+                      </Button>
+                    </Popconfirm>
                   </Space>
                 ),
               },

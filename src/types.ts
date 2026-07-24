@@ -23,7 +23,6 @@ export interface User {
 
 export interface House {
   id: number
-  title: string
   community: string
   area: number
   price: number
