@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, Table, Modal, Form, Popconfirm, Space, Spin } from 'antd'
+import { Card, Button, Input, InputNumber, Table, Modal, Form, Popconfirm, Space, Spin } from 'antd'
 import { App } from 'antd'
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { getCommunities, createCommunity, updateCommunity, deleteCommunity } from '../api/community'
@@ -185,8 +185,9 @@ export default function Communities() {
             <Form.Item
               name="sort_order"
               label="排序权重"
+              initialValue={0}
             >
-              <Input type="number" placeholder="数字越小越靠前" />
+              <InputNumber style={{ width: '100%' }} min={0} placeholder="数字越小越靠前" />
             </Form.Item>
           </Form>
         </Modal>
