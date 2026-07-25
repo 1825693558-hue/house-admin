@@ -14,10 +14,19 @@ export default function Communities() {
   const [form] = Form.useForm()
   const { message } = App.useApp()
 
+  // 排序状态
+  const [sortBy, setSortBy] = useState<string>('id')
+  const [sortOrder, setSortOrder] = useState<string>('desc')
+
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getCommunities({ page: 1, size: 100 })
+      const res = await getCommunities({
+        page: 1,
+        size: 100,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      })
       setData(res.items)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '加载失败'
@@ -29,7 +38,7 @@ export default function Communities() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [sortBy, sortOrder])
 
   const filtered = data.filter(
     (item) =>
@@ -77,20 +86,41 @@ export default function Communities() {
     }
   }
 
+  // 处理表格排序变化
+  const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: unknown) => {
+    const s = sorter as { field?: string; order?: 'ascend' | 'descend' | null }
+    if (s.field) {
+      setSortBy(s.field)
+      setSortOrder(s.order === 'ascend' ? 'asc' : 'desc')
+    } else {
+      // 取消排序时恢复默认
+      setSortBy('id')
+      setSortOrder('desc')
+    }
+  }
+
   const columns = [
-    { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
+    { title: '编号', dataIndex: 'id', key: 'id', width: 80, sorter: true },
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
+      sorter: true,
       render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span>,
     },
-    { title: '地址', dataIndex: 'address', key: 'address' },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160 },
+    { title: '地址', dataIndex: 'address', key: 'address', ellipsis: true },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 160,
+      sorter: true,
+    },
     {
       title: '操作',
       key: 'action',
       width: 150,
+      fixed: 'right' as const,
       render: (_: unknown, record: CommunityItem) => (
         <Space>
           <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
@@ -114,26 +144,32 @@ export default function Communities() {
 
   return (
     <Spin spinning={loading}>
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="ah-page-communities">
+        {/* 工具栏：响应式布局 */}
+        <div className="ah-toolbar">
           <Input
             prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
             placeholder="搜索小区名称或地址..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 320 }}
             allowClear
+            className="ah-toolbar-search"
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="ah-toolbar-btn">
             新增小区
           </Button>
         </div>
+
+        {/* 表格：响应式滚动 */}
         <Card styles={{ body: { padding: 0 } }}>
           <Table
             columns={columns}
             dataSource={filtered}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: true }}
+            onChange={handleTableChange}
+            scroll={{ x: 'max-content' }}
+            className="ah-responsive-table"
           />
         </Card>
 

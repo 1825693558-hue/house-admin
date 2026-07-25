@@ -14,7 +14,7 @@ export interface PaginatedList<T> {
   items: T[]
 }
 
-export function getCommunities(params?: { keyword?: string; page?: number; size?: number; simple?: boolean }) {
+export function getCommunities(params?: { keyword?: string; page?: number; size?: number; simple?: boolean; sort_by?: string; sort_order?: string }) {
   return request.get<PaginatedList<CommunityItem>>('/api/v1/communities', { params })
 }
 

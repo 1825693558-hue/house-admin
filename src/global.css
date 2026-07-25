@@ -208,6 +208,117 @@ body {
   color: #8c8c8c;
 }
 
+/* ========== 响应式布局 ========== */
+
+/* 工具栏 */
+.ah-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ah-toolbar-search {
+  width: 320px;
+}
+
+/* 响应式表格 */
+.ah-responsive-table .ant-table {
+  font-size: 14px;
+}
+
+/* ========== 移动端适配 (< 768px) ========== */
+@media (max-width: 768px) {
+  /* 布局调整 */
+  .ah-layout-header {
+    padding: 0 12px !important;
+  }
+
+  .ah-layout-content {
+    margin: 8px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  /* 头部隐藏非必要元素 */
+  .ah-header-search,
+  .ah-header-setting,
+  .ah-header-down {
+    display: none !important;
+  }
+
+  .ah-header-nickname {
+    display: none;
+  }
+
+  .ah-header-actions {
+    gap: 8px !important;
+  }
+
+  /* 工具栏 */
+  .ah-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+
+  .ah-toolbar-search {
+    width: 100% !important;
+  }
+
+  .ah-toolbar-btn {
+    width: 100%;
+  }
+
+  /* 表格 */
+  .ah-responsive-table .ant-table-thead > tr > th,
+  .ah-responsive-table .ant-table-tbody > tr > td {
+    padding: 8px 12px !important;
+    font-size: 13px;
+  }
+
+  .ah-responsive-table .ant-table-pagination {
+    padding: 8px !important;
+  }
+
+  /* Modal */
+  .ant-modal {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+
+  /* 抽屉菜单 */
+  .ah-mobile-drawer .ant-drawer-body {
+    padding: 0;
+  }
+}
+
+/* ========== 小屏手机 (< 480px) ========== */
+@media (max-width: 480px) {
+  .ah-layout-content {
+    margin: 4px !important;
+    padding: 8px !important;
+  }
+
+  .ah-responsive-table .ant-table-thead > tr > th,
+  .ah-responsive-table .ant-table-tbody > tr > td {
+    padding: 6px 8px !important;
+    font-size: 12px;
+  }
+
+  .ah-responsive-table .ant-pagination {
+    font-size: 12px;
+  }
+
+  .ah-responsive-table .ant-pagination-item {
+    min-width: 28px;
+    height: 28px;
+    line-height: 26px;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

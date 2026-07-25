@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Layout, Menu, Button, Input, Badge, Avatar, Dropdown } from 'antd'
+import { Layout, Menu, Button, Input, Badge, Avatar, Dropdown, Drawer } from 'antd'
 import { App } from 'antd'
 import type { MenuProps } from 'antd'
 import {
@@ -44,6 +44,8 @@ const roleLabelMap: Record<string, string> = {
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { modal } = App.useApp()
@@ -55,8 +57,25 @@ export default function AppLayout() {
   const selectedKey = location.pathname
   const pageTitle = pageTitleMap[location.pathname] || '仪表盘'
 
+  // 监听窗口大小变化，检测移动端
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768
+      setIsMobile(mobile)
+      if (mobile) {
+        setCollapsed(true)
+      }
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     navigate(e.key)
+    if (isMobile) {
+      setMobileOpen(false)
+    }
   }
 
   const handleLogout = () => {
@@ -79,98 +98,129 @@ export default function AppLayout() {
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
   ]
 
-  return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        width={240}
+  // 侧边栏菜单内容（PC + 移动端共用）
+  const sidebarContent = (
+    <>
+      <div
         style={{
-          background: '#fff',
-          boxShadow: '1px 0 4px rgba(0,0,0,0.04)',
-          zIndex: 10,
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderBottom: '1px solid #f0f0f0',
+          gap: 8,
         }}
       >
         <div
           style={{
-            height: 64,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: 'linear-gradient(135deg, #2d8f5e, #1e6b46)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderBottom: '1px solid #f0f0f0',
-            gap: 8,
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 16,
           }}
         >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #2d8f5e, #1e6b46)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 16,
-            }}
-          >
-            A
-          </div>
-          {!collapsed && (
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
-              AI House
-            </span>
-          )}
+          A
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{ borderRight: 0, paddingTop: 8 }}
-        />
-        {!collapsed && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: '16px 20px',
-              borderTop: '1px solid #f0f0f0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              background: '#fff',
-            }}
-          >
-            <Avatar size={36} style={{ background: '#2d8f5e' }} icon={<UserOutlined />} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{nickname}</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>{roleLabel}</div>
-            </div>
-          </div>
+        {!collapsed && !isMobile && (
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
+            AI House
+          </span>
         )}
-        {collapsed && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: '16px 0',
-              borderTop: '1px solid #f0f0f0',
-              display: 'flex',
-              justifyContent: 'center',
-              background: '#fff',
-            }}
-          >
-            <Avatar size={36} style={{ background: '#2d8f5e' }} icon={<UserOutlined />} />
-          </div>
+        {isMobile && (
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
+            AI House
+          </span>
         )}
-      </Sider>
+      </div>
+      <Menu
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={menuItems}
+        onClick={handleMenuClick}
+        style={{ borderRight: 0, paddingTop: 8 }}
+      />
+      {!collapsed && !isMobile && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 20px',
+            borderTop: '1px solid #f0f0f0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            background: '#fff',
+          }}
+        >
+          <Avatar size={36} style={{ background: '#2d8f5e' }} icon={<UserOutlined />} />
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{nickname}</div>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>{roleLabel}</div>
+          </div>
+        </div>
+      )}
+      {collapsed && !isMobile && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 0',
+            borderTop: '1px solid #f0f0f0',
+            display: 'flex',
+            justifyContent: 'center',
+            background: '#fff',
+          }}
+        >
+          <Avatar size={36} style={{ background: '#2d8f5e' }} icon={<UserOutlined />} />
+        </div>
+      )}
+    </>
+  )
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      {/* PC 端侧边栏 */}
+      {!isMobile && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          width={240}
+          style={{
+            background: '#fff',
+            boxShadow: '1px 0 4px rgba(0,0,0,0.04)',
+            zIndex: 10,
+          }}
+        >
+          {sidebarContent}
+        </Sider>
+      )}
+
+      {/* 移动端抽屉菜单 */}
+      {isMobile && (
+        <Drawer
+          placement="left"
+          closable={false}
+          onClose={() => setMobileOpen(false)}
+          open={mobileOpen}
+          width={240}
+          bodyStyle={{ padding: 0 }}
+          className="ah-mobile-drawer"
+        >
+          {sidebarContent}
+        </Drawer>
+      )}
+
       <Layout>
         <Header
           style={{
@@ -181,33 +231,37 @@ export default function AppLayout() {
             justifyContent: 'space-between',
             boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
           }}
+          className="ah-layout-header"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => isMobile ? setMobileOpen(true) : setCollapsed(!collapsed)}
               style={{ fontSize: 16 }}
             />
             <span style={{ fontSize: 16, fontWeight: 600, color: '#1f2937' }}>
               {pageTitle}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }} className="ah-header-actions">
             <Input
               prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
               placeholder="搜索..."
               style={{ width: 240, borderRadius: 8 }}
+              className="ah-header-search"
             />
             <Badge count={5} size="small">
               <Button type="text" icon={<BellOutlined style={{ fontSize: 18 }} />} />
             </Badge>
-            <Button type="text" icon={<SettingOutlined style={{ fontSize: 18 }} />} />
+            <Button type="text" icon={<SettingOutlined style={{ fontSize: 18 }} />} className="ah-header-setting" />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <Avatar size={32} style={{ background: '#2d8f5e' }} icon={<UserOutlined />} />
-                <span style={{ fontSize: 14, color: '#1f2937' }}>{nickname}</span>
-                <DownOutlined style={{ fontSize: 12, color: '#6b7280' }} />
+                <span style={{ fontSize: 14, color: '#1f2937' }} className="ah-header-nickname">
+                  {nickname}
+                </span>
+                <DownOutlined style={{ fontSize: 12, color: '#6b7280' }} className="ah-header-down" />
               </div>
             </Dropdown>
           </div>
@@ -220,6 +274,7 @@ export default function AppLayout() {
             borderRadius: 10,
             minHeight: 280,
           }}
+          className="ah-layout-content"
         >
           <Outlet />
         </Content>
