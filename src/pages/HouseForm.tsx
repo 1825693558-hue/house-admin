@@ -61,7 +61,7 @@ export default function HouseForm() {
     const loadMeta = async () => {
       try {
         const [commRes, appRes] = await Promise.all([
-          getCommunities({ page: 1, size: 999 }),
+          getCommunities({ page: 1, size: 100 }),
           getAppliances(),
         ])
         setCommunities(commRes.items || [])
