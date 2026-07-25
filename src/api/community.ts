@@ -4,6 +4,7 @@ export interface CommunityItem {
   id: number
   name: string
   address: string | null
+  sort_order: number
   created_at: string
 }
 
@@ -18,11 +19,11 @@ export function getCommunities(params?: { keyword?: string; page?: number; size?
   return request.get<PaginatedList<CommunityItem>>('/api/v1/communities', { params })
 }
 
-export function createCommunity(data: { name: string; address?: string }) {
+export function createCommunity(data: { name: string; address?: string; sort_order?: number }) {
   return request.post<CommunityItem>('/api/v1/communities', data)
 }
 
-export function updateCommunity(id: number, data: { name?: string; address?: string }) {
+export function updateCommunity(id: number, data: { name?: string; address?: string; sort_order?: number }) {
   return request.put<CommunityItem>(`/api/v1/communities/${id}`, data)
 }
 

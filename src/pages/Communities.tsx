@@ -14,18 +14,14 @@ export default function Communities() {
   const [form] = Form.useForm()
   const { message } = App.useApp()
 
-  // 排序状态
-  const [sortBy, setSortBy] = useState<string>('id')
-  const [sortOrder, setSortOrder] = useState<string>('desc')
-
   const fetchData = async () => {
     setLoading(true)
     try {
       const res = await getCommunities({
         page: 1,
         size: 100,
-        sort_by: sortBy,
-        sort_order: sortOrder,
+        sort_by: 'sort_order',
+        sort_order: 'asc',
       })
       setData(res.items)
     } catch (err: unknown) {
@@ -38,7 +34,7 @@ export default function Communities() {
 
   useEffect(() => {
     fetchData()
-  }, [sortBy, sortOrder])
+  }, [])
 
   const filtered = data.filter(
     (item) =>
@@ -54,7 +50,11 @@ export default function Communities() {
 
   const handleEdit = (record: CommunityItem) => {
     setEditing(record)
-    form.setFieldsValue({ name: record.name, address: record.address })
+    form.setFieldsValue({
+      name: record.name,
+      address: record.address,
+      sort_order: record.sort_order,
+    })
     setModalOpen(true)
   }
 
@@ -69,13 +69,13 @@ export default function Communities() {
     }
   }
 
-  const handleSave = async (values: { name: string; address?: string }) => {
+  const handleSave = async (values: { name: string; address?: string; sort_order?: number }) => {
     try {
       if (editing) {
         await updateCommunity(editing.id, values)
         message.success('修改成功')
       } else {
-        await createCommunity(values)
+        await createCommunity({ ...values, sort_order: values.sort_order || 0 })
         message.success('新增成功')
       }
       setModalOpen(false)
@@ -86,36 +86,23 @@ export default function Communities() {
     }
   }
 
-  // 处理表格排序变化
-  const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: unknown) => {
-    const s = sorter as { field?: string; order?: 'ascend' | 'descend' | null }
-    if (s.field) {
-      setSortBy(s.field)
-      setSortOrder(s.order === 'ascend' ? 'asc' : 'desc')
-    } else {
-      // 取消排序时恢复默认
-      setSortBy('id')
-      setSortOrder('desc')
-    }
-  }
-
   const columns = [
-    { title: '编号', dataIndex: 'id', key: 'id', width: 80, sorter: true },
+    { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      sorter: true,
       render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span>,
     },
     { title: '地址', dataIndex: 'address', key: 'address', ellipsis: true },
     {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 160,
-      sorter: true,
+      title: '排序',
+      dataIndex: 'sort_order',
+      key: 'sort_order',
+      width: 80,
+      render: (sort: number) => <span style={{ color: '#9ca3af', fontSize: 13 }}>{sort}</span>,
     },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160 },
     {
       title: '操作',
       key: 'action',
@@ -167,7 +154,6 @@ export default function Communities() {
             dataSource={filtered}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: true }}
-            onChange={handleTableChange}
             scroll={{ x: 'max-content' }}
             className="ah-responsive-table"
           />
@@ -195,6 +181,12 @@ export default function Communities() {
               label="地址"
             >
               <Input placeholder="请输入地址" />
+            </Form.Item>
+            <Form.Item
+              name="sort_order"
+              label="排序权重"
+            >
+              <Input type="number" placeholder="数字越小越靠前" />
             </Form.Item>
           </Form>
         </Modal>
