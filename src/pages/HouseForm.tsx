@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Form, Input, InputNumber, Select, Button, Card, Space, Spin,
-  Radio, Divider, Tag, Row, Col, Checkbox, App
+  Divider, Tag, Row, Col, Checkbox, App
 } from 'antd'
 import { PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { createHouse, updateHouse, getHouseDetail, type HouseDetail } from '../api/house'

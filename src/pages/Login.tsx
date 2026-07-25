@@ -4,7 +4,7 @@ import { Card, Form, Input, Button, Typography, Checkbox } from 'antd'
 import { App } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { login, getMe } from '../api/auth'
-import { setToken, setUser, getRememberedCredentials, saveCredentials } from '../utils/auth'
+import { setToken, setUser, getRememberedCredentials, saveCredentials, isLoggedIn } from '../utils/auth'
 
 const { Title } = Typography
 
@@ -15,14 +15,18 @@ export default function Login() {
   const navigate = useNavigate()
   const { message } = App.useApp()
 
-  // 页面加载时，如果有记住的账号密码则自动填充
+  // 页面加载时：如果 token 未过期，直接跳转 Dashboard；否则填充记住的账号密码
   useEffect(() => {
+    if (isLoggedIn()) {
+      navigate('/dashboard', { replace: true })
+      return
+    }
     const saved = getRememberedCredentials()
     if (saved) {
       form.setFieldsValue({ username: saved.username, password: saved.password })
       setRemember(true)
     }
-  }, [])
+  }, [navigate])
 
   const handleFinish = async (values: { username: string; password: string }) => {
     setLoading(true)

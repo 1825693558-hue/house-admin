@@ -15,9 +15,9 @@ ARG VITE_USE_MOCK=false
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_USE_MOCK=${VITE_USE_MOCK}
 
-# 安装依赖（删除 lock 文件重新安装，避免 Windows 生成的 lock 在 Linux 下不兼容）
+# 安装依赖（使用国内镜像源加速；删除 lock 文件重新安装，避免 Windows 生成的 lock 在 Linux 下不兼容）
 COPY package.json ./
-RUN npm install
+RUN npm config set registry https://registry.npmmirror.com && npm install
 
 # 复制源码并构建
 COPY . .
@@ -26,8 +26,9 @@ RUN npm run build
 # ---------- 运行阶段 ----------
 FROM nginx:alpine
 
-# 复制构建产物到 Nginx 目录
-COPY --from=builder /app/dist /usr/share/nginx/html
+# 复制构建产物到 Nginx 的 /admin 子目录（配合 vite.config.ts 的 base: '/admin/'）
+# 这样 /admin/assets/xxx.js 能直接映射到 /usr/share/nginx/html/admin/assets/xxx.js
+COPY --from=builder /app/dist /usr/share/nginx/html/admin
 
 # 复制 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf

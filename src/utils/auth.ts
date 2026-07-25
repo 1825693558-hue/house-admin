@@ -40,8 +40,45 @@ export function getUser(): UserInfo | null {
   }
 }
 
+/**
+ * 解码 JWT payload（不验证签名，仅用于读取 exp 等字段）
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    // base64url → base64 → JSON
+    const b64 = (parts[1] ?? '').replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(
+      atob(b64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 检查 JWT token 是否已过期
+ * 通过解码 JWT payload 中的 exp 字段判断，提前 10 秒判定过期以避免边界问题
+ */
+export function isTokenExpired(): boolean {
+  const token = getToken()
+  if (!token) return true
+
+  const payload = decodeJwtPayload(token)
+  if (!payload) return true
+
+  const exp = payload.exp
+  if (typeof exp !== 'number') return false // 没有 exp 字段，认为不过期
+  return Date.now() >= exp * 1000 - 10_000
+}
+
 export function isLoggedIn(): boolean {
-  return !!getToken()
+  return !!getToken() && !isTokenExpired()
 }
 
 export function isAdmin(): boolean {

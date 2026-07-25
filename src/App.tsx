@@ -39,11 +39,11 @@ export default function App() {
       }}
     >
       <AntApp>
-        <BrowserRouter>
+        <BrowserRouter basename="/admin">
           <NavigateRegister />
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<AppLayout />}>
+            <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="communities" element={<PrivateRoute><Communities /></PrivateRoute>} />
