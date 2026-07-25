@@ -9,6 +9,7 @@ import Communities from './pages/Communities'
 import Appliances from './pages/Appliances'
 import Users from './pages/Users'
 import Houses from './pages/Houses'
+import HouseForm from './pages/HouseForm'
 import { isLoggedIn } from './utils/auth'
 import { setNavigate } from './utils/navigate'
 
@@ -49,6 +50,8 @@ export default function App() {
               <Route path="appliances" element={<PrivateRoute><Appliances /></PrivateRoute>} />
               <Route path="users" element={<PrivateRoute><Users /></PrivateRoute>} />
               <Route path="houses" element={<PrivateRoute><Houses /></PrivateRoute>} />
+              <Route path="houses/new" element={<PrivateRoute><HouseForm /></PrivateRoute>} />
+              <Route path="houses/edit/:id" element={<PrivateRoute><HouseForm /></PrivateRoute>} />
             </Route>
           </Routes>
         </BrowserRouter>

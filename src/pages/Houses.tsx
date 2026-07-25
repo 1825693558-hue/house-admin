@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm } from 'antd'
 import { App } from 'antd'
-import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons'
 import { getHouses, deleteHouse } from '../api/house'
 import type { HouseItem } from '../api/house'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
 
 export default function Houses() {
+  const navigate = useNavigate()
   const [data, setData] = useState<HouseItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
@@ -128,7 +130,7 @@ export default function Houses() {
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 200,
       render: (_: unknown, record: HouseItem) => (
         <Space>
           <Button
@@ -138,6 +140,14 @@ export default function Houses() {
             onClick={() => message.info(`查看房源: ${record.community_name || record.id}`)}
           >
             查看
+          </Button>
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/houses/edit/${record.id}`)}
+          >
+            编辑
           </Button>
           <Popconfirm
             title="确认删除"
@@ -173,6 +183,9 @@ export default function Houses() {
             </Button>
             <Button icon={<ReloadOutlined />} onClick={handleReset}>
               重置
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/houses/new')}>
+              新增房源
             </Button>
           </Space>
         </div>
