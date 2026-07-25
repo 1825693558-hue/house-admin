@@ -9,8 +9,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 构建参数：API 地址（必须在构建时传入）
-ARG VITE_API_BASE_URL=http://localhost:8000
+# 构建参数：API 地址（生产环境用空字符串 = 相对路径，由 Nginx 代理）
+ARG VITE_API_BASE_URL=
 ARG VITE_USE_MOCK=false
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_USE_MOCK=${VITE_USE_MOCK}
