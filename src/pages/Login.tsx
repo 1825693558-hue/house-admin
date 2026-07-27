@@ -87,7 +87,7 @@ export default function Login() {
             A
           </div>
           <Title level={3} style={{ margin: 0, color: '#1f2937' }}>
-            AI House 管理后台
+            建华中介 管理后台
           </Title>
           <p style={{ color: '#6b7280', marginTop: 8, marginBottom: 0 }}>
             请输入您的账号密码登录系统

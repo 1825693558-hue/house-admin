@@ -132,12 +132,12 @@ export default function AppLayout() {
         </div>
         {!collapsed && !isMobile && (
           <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
-            AI House
+            建华中介
           </span>
         )}
         {isMobile && (
           <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
-            AI House
+            建华中介
           </span>
         )}
       </div>
