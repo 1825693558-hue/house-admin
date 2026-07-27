@@ -37,13 +37,18 @@ interface FormValues {
   appliance_ids?: number[]
 }
 
-const statusOptions = ['空闲', '在售', '出租中', '已售', '已租', '下架']
+const saleStatusOptions = ['空闲', '在售', '已售', '下架']
+const rentStatusOptions = ['空闲', '出租中', '已租', '下架']
 const houseTypeOptions = ['住宅', '公寓', '别墅', '商铺', '写字楼', '厂房', '其他']
 const decorationOptions = ['毛坯', '简装', '精装', '豪装']
 const keyTypeOptions = ['无钥匙', '物理钥匙', '密码锁']
 const roleOptions = ['业主', '租客', '代理人', '物业']
 
-export default function HouseForm() {
+interface HouseFormProps {
+  type?: 'sale' | 'rent'
+}
+
+export default function HouseForm({ type: propType }: HouseFormProps) {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const { message } = App.useApp()
@@ -55,6 +60,11 @@ export default function HouseForm() {
   const [communities, setCommunities] = useState<CommunityItem[]>([])
   const [appliances, setAppliances] = useState<ApplianceItem[]>([])
   const [imageInput, setImageInput] = useState('')
+  const [actualType, setActualType] = useState<'sale' | 'rent'>(propType || 'sale')
+
+  const isSale = actualType === 'sale'
+  const statusOptions = isSale ? saleStatusOptions : rentStatusOptions
+  const listPath = isSale ? '/houses/sale' : '/houses/rent'
 
   // 加载小区和家电列表
   useEffect(() => {
@@ -75,10 +85,35 @@ export default function HouseForm() {
 
   // 编辑模式加载详情
   useEffect(() => {
-    if (!id) return
+    if (!id) {
+      // 新建模式：根据 propType 设置默认值
+      if (propType) {
+        setActualType(propType)
+        form.setFieldsValue({
+          status: '空闲',
+          key_type: '无钥匙',
+          contacts: [{ name: '', phone: '', role: '', is_primary: 0 }],
+          images: [],
+          appliance_ids: [],
+        })
+      }
+      return
+    }
     setLoading(true)
     getHouseDetail(Number(id))
       .then((detail: HouseDetail) => {
+        // 根据数据判断房源用途类型
+        let detectedType: 'sale' | 'rent' = 'sale'
+        if (detail.sale_price != null && detail.rent_price == null) {
+          detectedType = 'sale'
+        } else if (detail.rent_price != null && detail.sale_price == null) {
+          detectedType = 'rent'
+        } else if (detail.sale_price != null && detail.rent_price != null) {
+          // 两者都有时，优先按 sale_price 判断
+          detectedType = 'sale'
+        }
+        setActualType(detectedType)
+
         const applianceIds = detail.appliances?.map((a) => a.appliance_id) || []
         form.setFieldsValue({
           community_id: detail.community_id,
@@ -110,7 +145,7 @@ export default function HouseForm() {
       })
       .catch(() => message.error('加载房源详情失败'))
       .finally(() => setLoading(false))
-  }, [id, form, message])
+  }, [id, form, message, propType])
 
   const handleAddImage = () => {
     const val = imageInput.trim()
@@ -139,8 +174,8 @@ export default function HouseForm() {
         area: values.area ?? null,
         floor: values.floor ?? null,
         total_floors: values.total_floors ?? null,
-        sale_price: values.sale_price ?? null,
-        rent_price: values.rent_price ?? null,
+        sale_price: isSale ? (values.sale_price ?? null) : null,
+        rent_price: isSale ? null : (values.rent_price ?? null),
         price_note: values.price_note || null,
         status: values.status || '空闲',
         house_type: values.house_type || null,
@@ -161,7 +196,7 @@ export default function HouseForm() {
         await createHouse(payload)
         message.success('创建成功')
       }
-      navigate('/houses')
+      navigate(listPath)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '保存失败'
       message.error(msg)
@@ -170,15 +205,19 @@ export default function HouseForm() {
     }
   }
 
+  const pageTitle = isEdit
+    ? (isSale ? '编辑出售房源' : '编辑出租房源')
+    : (isSale ? '新增出售房源' : '新增出租房源')
+
   return (
     <Spin spinning={loading}>
       <div>
         <div style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/houses')}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(listPath)}>
             返回列表
           </Button>
           <span style={{ marginLeft: 12, fontSize: 18, fontWeight: 600 }}>
-            {isEdit ? '编辑房源' : '新增房源'}
+            {pageTitle}
           </span>
         </div>
 
@@ -194,6 +233,21 @@ export default function HouseForm() {
             appliance_ids: [],
           }}
         >
+          {/* ---------- 房源用途标识 ---------- */}
+          <Card style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ color: '#6b7280' }}>房源用途:</span>
+              <Tag color={isSale ? '#2d8f5e' : '#2980b9'} style={{ fontSize: 14, padding: '4px 12px' }}>
+                {isSale ? '出售' : '出租'}
+              </Tag>
+              {isEdit && (
+                <span style={{ color: '#9ca3af', fontSize: 12 }}>
+                  （根据房源数据自动判断，不可修改）
+                </span>
+              )}
+            </div>
+          </Card>
+
           {/* ---------- 基本信息 ---------- */}
           <Card title="基本信息" style={{ marginBottom: 16 }}>
             <Row gutter={16}>
@@ -241,16 +295,20 @@ export default function HouseForm() {
           {/* ---------- 价格信息 ---------- */}
           <Card title="价格信息" style={{ marginBottom: 16 }}>
             <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="出售价格 (万元)" name="sale_price">
-                  <InputNumber style={{ width: '100%' }} min={0} placeholder="0.00" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="出租价格 (元/月)" name="rent_price">
-                  <InputNumber style={{ width: '100%' }} min={0} placeholder="0.00" />
-                </Form.Item>
-              </Col>
+              {isSale && (
+                <Col span={8}>
+                  <Form.Item label="出售价格 (万元)" name="sale_price">
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="0.00" />
+                  </Form.Item>
+                </Col>
+              )}
+              {!isSale && (
+                <Col span={8}>
+                  <Form.Item label="出租价格 (元/月)" name="rent_price">
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="0.00" />
+                  </Form.Item>
+                </Col>
+              )}
               <Col span={8}>
                 <Form.Item label="价格备注" name="price_note">
                   <Input placeholder="如：可议价、包物业等" />
@@ -389,7 +447,7 @@ export default function HouseForm() {
               <Button type="primary" htmlType="submit" loading={saving} size="large">
                 {isEdit ? '保存修改' : '创建房源'}
               </Button>
-              <Button onClick={() => navigate('/houses')} size="large">
+              <Button onClick={() => navigate(listPath)} size="large">
                 取消
               </Button>
             </Space>

@@ -73,6 +73,7 @@ export interface HouseListParams {
   max_floor?: number
   start_date?: string
   end_date?: string
+  house_use_type?: 'sale' | 'rent'
 }
 
 export interface PaginatedList<T> {

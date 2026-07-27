@@ -26,7 +26,8 @@ const menuItems: MenuProps['items'] = [
   { key: '/communities', icon: <HomeOutlined />, label: '小区管理' },
   { key: '/appliances', icon: <ToolOutlined />, label: '家电管理' },
   { key: '/users', icon: <TeamOutlined />, label: '账号管理' },
-  { key: '/houses', icon: <HomeOutlined />, label: '房源数据' },
+  { key: '/houses/sale', icon: <HomeOutlined />, label: '出售房源' },
+  { key: '/houses/rent', icon: <HomeOutlined />, label: '出租房源' },
 ]
 
 const pageTitleMap: Record<string, string> = {
@@ -34,7 +35,9 @@ const pageTitleMap: Record<string, string> = {
   '/communities': '小区管理',
   '/appliances': '家电管理',
   '/users': '账号管理',
-  '/houses': '房源数据',
+  '/houses/sale': '出售房源',
+  '/houses/rent': '出租房源',
+  '/houses/new': '新增房源',
 }
 
 const roleLabelMap: Record<string, string> = {

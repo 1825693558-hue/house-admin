@@ -7,7 +7,14 @@ import { getHouses, deleteHouse } from '../api/house'
 import type { HouseItem } from '../api/house'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
 
-export default function Houses() {
+interface HousesProps {
+  type: 'sale' | 'rent'
+}
+
+const saleStatusOptions = ['在售', '已售', '空闲', '下架']
+const rentStatusOptions = ['出租中', '已租', '空闲', '下架']
+
+export default function Houses({ type }: HousesProps) {
   const navigate = useNavigate()
   const [data, setData] = useState<HouseItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -19,10 +26,15 @@ export default function Houses() {
   const [filterVisible, setFilterVisible] = useState(false)
   const { message } = App.useApp()
 
+  const isSale = type === 'sale'
+  const pageTitle = isSale ? '出售房源' : '出租房源'
+  const addButtonText = isSale ? '新增出售房源' : '新增出租房源'
+  const statusOptions = isSale ? saleStatusOptions : rentStatusOptions
+
   const fetchData = async () => {
     setLoading(true)
     try {
-      const params: Record<string, unknown> = { page: 1, size: 20 }
+      const params: Record<string, unknown> = { page: 1, size: 20, house_use_type: type }
       if (search) params.keyword = search
       if (statusFilter) params.status = statusFilter
       if (decorationFilter) params.decoration = decorationFilter
@@ -41,7 +53,7 @@ export default function Houses() {
 
   useEffect(() => {
     fetchData()
-  }, [statusFilter, decorationFilter, keyFilter])
+  }, [statusFilter, decorationFilter, keyFilter, type])
 
   // 防抖搜索
   useEffect(() => {
@@ -71,6 +83,22 @@ export default function Houses() {
     }
   }
 
+  const priceColumn = isSale
+    ? {
+        title: '出售价(万)',
+        dataIndex: 'sale_price',
+        key: 'sale_price',
+        width: 110,
+        render: (v: number) => <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{v || '-'}</span>,
+      }
+    : {
+        title: '出租价(元/月)',
+        dataIndex: 'rent_price',
+        key: 'rent_price',
+        width: 130,
+        render: (v: number) => <span style={{ color: '#2980b9', fontWeight: 600 }}>{v || '-'}</span>,
+      }
+
   const columns = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
@@ -81,20 +109,7 @@ export default function Houses() {
     },
     { title: '地址', dataIndex: 'address', key: 'address' },
     { title: '面积(m²)', dataIndex: 'area', key: 'area', width: 100 },
-    {
-      title: '出售价(万)',
-      dataIndex: 'sale_price',
-      key: 'sale_price',
-      width: 110,
-      render: (v: number) => <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{v || '-'}</span>,
-    },
-    {
-      title: '出租价(元/月)',
-      dataIndex: 'rent_price',
-      key: 'rent_price',
-      width: 130,
-      render: (v: number) => <span style={{ color: '#2980b9', fontWeight: 600 }}>{v || '-'}</span>,
-    },
+    priceColumn,
     {
       title: '价格备注',
       dataIndex: 'price_note',
@@ -131,6 +146,7 @@ export default function Houses() {
       title: '操作',
       key: 'action',
       width: 200,
+      fixed: 'right' as const,
       render: (_: unknown, record: HouseItem) => (
         <Space>
           <Button
@@ -168,24 +184,25 @@ export default function Houses() {
   return (
     <Spin spinning={loading}>
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
-            placeholder="搜索小区或地址..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 320 }}
-            allowClear
-          />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>{pageTitle}</h2>
           <Space>
+            <Input
+              prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+              placeholder="搜索小区或地址..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: 320 }}
+              allowClear
+            />
             <Button icon={<FilterOutlined />} onClick={() => setFilterVisible(!filterVisible)}>
               筛选
             </Button>
             <Button icon={<ReloadOutlined />} onClick={handleReset}>
               重置
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/houses/new')}>
-              新增房源
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`/houses/new?type=${type}`)}>
+              {addButtonText}
             </Button>
           </Space>
         </div>
@@ -202,12 +219,9 @@ export default function Houses() {
                   style={{ width: 140 }}
                   allowClear
                 >
-                  <Select.Option value="在售">在售</Select.Option>
-                  <Select.Option value="出租中">出租中</Select.Option>
-                  <Select.Option value="已售">已售</Select.Option>
-                  <Select.Option value="已租">已租</Select.Option>
-                  <Select.Option value="空闲">空闲</Select.Option>
-                  <Select.Option value="下架">下架</Select.Option>
+                  {statusOptions.map((s) => (
+                    <Select.Option key={s} value={s}>{s}</Select.Option>
+                  ))}
                 </Select>
               </div>
               <div>

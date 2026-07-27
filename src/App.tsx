@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ConfigProvider, App as AntApp } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import AppLayout from './components/layout/AppLayout'
@@ -15,6 +15,24 @@ import { setNavigate } from './utils/navigate'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />
+}
+
+function SaleHousesPage() {
+  return <Houses type="sale" />
+}
+
+function RentHousesPage() {
+  return <Houses type="rent" />
+}
+
+function HouseFormWrapper() {
+  const { id } = useParams<{ id?: string }>()
+  const isEdit = Boolean(id)
+  // 编辑模式无法从路由判断类型，由组件内部根据数据判断
+  // 新建模式需要从路由查询参数判断
+  const searchParams = new URLSearchParams(window.location.search)
+  const typeFromQuery = searchParams.get('type') as 'sale' | 'rent' | null
+  return <HouseForm type={isEdit ? undefined : (typeFromQuery || 'sale')} />
 }
 
 // 在 Router 内部注册 navigate，供 axios 拦截器使用
@@ -49,9 +67,11 @@ export default function App() {
               <Route path="communities" element={<PrivateRoute><Communities /></PrivateRoute>} />
               <Route path="appliances" element={<PrivateRoute><Appliances /></PrivateRoute>} />
               <Route path="users" element={<PrivateRoute><Users /></PrivateRoute>} />
-              <Route path="houses" element={<PrivateRoute><Houses /></PrivateRoute>} />
-              <Route path="houses/new" element={<PrivateRoute><HouseForm /></PrivateRoute>} />
-              <Route path="houses/edit/:id" element={<PrivateRoute><HouseForm /></PrivateRoute>} />
+              <Route path="houses" element={<Navigate to="/houses/sale" replace />} />
+              <Route path="houses/sale" element={<PrivateRoute><SaleHousesPage /></PrivateRoute>} />
+              <Route path="houses/rent" element={<PrivateRoute><RentHousesPage /></PrivateRoute>} />
+              <Route path="houses/new" element={<PrivateRoute><HouseFormWrapper /></PrivateRoute>} />
+              <Route path="houses/edit/:id" element={<PrivateRoute><HouseFormWrapper /></PrivateRoute>} />
             </Route>
           </Routes>
         </BrowserRouter>
