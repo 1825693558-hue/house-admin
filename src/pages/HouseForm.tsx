@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Form, Input, InputNumber, Select, Button, Card, Space, Spin,
-  Divider, Tag, Row, Col, Checkbox, App
+  Divider, Tag, Row, Col, Checkbox, App, Upload, Image
 } from 'antd'
-import { PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import type { UploadProps, UploadFile } from 'antd'
+import {
+  PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined,
+  InboxOutlined, UploadOutlined
+} from '@ant-design/icons'
 import { createHouse, updateHouse, getHouseDetail, type HouseDetail } from '../api/house'
 import { getCommunities, type CommunityItem } from '../api/community'
 import { getAppliances, type ApplianceItem } from '../api/appliance'
+import { uploadFile } from '../api/upload'
 
 interface ContactField {
   name: string
@@ -59,7 +64,8 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
   const [saving, setSaving] = useState(false)
   const [communities, setCommunities] = useState<CommunityItem[]>([])
   const [appliances, setAppliances] = useState<ApplianceItem[]>([])
-  const [imageInput, setImageInput] = useState('')
+  const [imageFileList, setImageFileList] = useState<UploadFile[]>([])
+  const [videoUploading, setVideoUploading] = useState(false)
   const [actualType, setActualType] = useState<'sale' | 'rent'>(propType || 'sale')
 
   const isSale = actualType === 'sale'
@@ -115,6 +121,7 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
         setActualType(detectedType)
 
         const applianceIds = detail.appliances?.map((a) => a.appliance_id) || []
+        const images = detail.images || []
         form.setFieldsValue({
           community_id: detail.community_id,
           address: detail.address,
@@ -130,7 +137,7 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
           key_type: detail.key_type,
           lock_password: detail.lock_password,
           video_url: detail.video_url,
-          images: detail.images || [],
+          images,
           description: detail.description,
           contacts: detail.contacts?.length
             ? detail.contacts.map((c) => ({
@@ -142,26 +149,72 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
             : [{ name: '', phone: '', role: '', is_primary: 0 }],
           appliance_ids: applianceIds,
         })
+        // 初始化图片文件列表
+        setImageFileList(
+          images.map((url, index) => ({
+            uid: `existing-${index}`,
+            name: url.split('/').pop() || `image-${index}`,
+            status: 'done',
+            url,
+          }))
+        )
       })
       .catch(() => message.error('加载房源详情失败'))
       .finally(() => setLoading(false))
   }, [id, form, message, propType])
 
-  const handleAddImage = () => {
-    const val = imageInput.trim()
-    if (!val) return
-    const current = form.getFieldValue('images') || []
-    if (current.includes(val)) {
-      message.warning('该图片已存在')
-      return
+  // ---------- 图片上传 ----------
+  const handleImageUpload: UploadProps['customRequest'] = async (options) => {
+    const { file, onSuccess, onError } = options
+    try {
+      const result = await uploadFile(file as File)
+      onSuccess?.(result)
+      // 同步到表单 images 字段
+      const current = form.getFieldValue('images') || []
+      form.setFieldValue('images', [...current, result.url])
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '上传失败'
+      message.error(msg)
+      onError?.(err as Error)
     }
-    form.setFieldValue('images', [...current, val])
-    setImageInput('')
   }
 
-  const handleRemoveImage = (url: string) => {
-    const current = (form.getFieldValue('images') || []) as string[]
-    form.setFieldValue('images', current.filter((u) => u !== url))
+  const handleImageChange: UploadProps['onChange'] = (info) => {
+    let newFileList = [...info.fileList]
+    // 限制只保留已上传完成的文件的 URL，失败的保留但标记错误
+    newFileList = newFileList.map((file) => {
+      if (file.status === 'done' && file.response) {
+        return { ...file, url: file.response.url }
+      }
+      return file
+    })
+    setImageFileList(newFileList)
+  }
+
+  const handleImageRemove: UploadProps['onRemove'] = (file) => {
+    const url = file.url || (file.response as { url?: string })?.url
+    if (url) {
+      const current = (form.getFieldValue('images') || []) as string[]
+      form.setFieldValue('images', current.filter((u) => u !== url))
+    }
+  }
+
+  // ---------- 视频上传 ----------
+  const handleVideoUpload: UploadProps['customRequest'] = async (options) => {
+    const { file, onSuccess, onError } = options
+    setVideoUploading(true)
+    try {
+      const result = await uploadFile(file as File)
+      form.setFieldValue('video_url', result.url)
+      message.success('视频上传成功')
+      onSuccess?.(result)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '上传失败'
+      message.error(msg)
+      onError?.(err as Error)
+    } finally {
+      setVideoUploading(false)
+    }
   }
 
   const handleSubmit = async (values: FormValues) => {
@@ -343,8 +396,20 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
                 </Form.Item>
               </Col>
               <Col span={16}>
-                <Form.Item label="视频链接" name="video_url">
-                  <Input placeholder="视频 URL" />
+                <Form.Item label="视频" name="video_url">
+                  <Space.Compact style={{ width: '100%' }}>
+                    <Input placeholder="视频 URL，可手动输入或上传自动填充" />
+                    <Upload
+                      customRequest={handleVideoUpload}
+                      showUploadList={false}
+                      accept="video/*"
+                      maxCount={1}
+                    >
+                      <Button icon={<UploadOutlined />} loading={videoUploading}>
+                        {videoUploading ? '上传中' : '上传视频'}
+                      </Button>
+                    </Upload>
+                  </Space.Compact>
                 </Form.Item>
               </Col>
             </Row>
@@ -355,34 +420,25 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
             <Form.Item name="images" noStyle>
               <Input type="hidden" />
             </Form.Item>
-            <Space style={{ marginBottom: 8 }}>
-              <Input
-                placeholder="输入图片 URL"
-                value={imageInput}
-                onChange={(e) => setImageInput(e.target.value)}
-                onPressEnter={handleAddImage}
-                style={{ width: 400 }}
-              />
-              <Button onClick={handleAddImage}>添加</Button>
-            </Space>
-            <div>
-              <Form.Item noStyle shouldUpdate>
-                {({ getFieldValue }) => {
-                  const imgs: string[] = getFieldValue('images') || []
-                  return imgs.length > 0 ? (
-                    <Space wrap>
-                      {imgs.map((url) => (
-                        <Tag key={url} closable onClose={() => handleRemoveImage(url)} style={{ maxWidth: 300 }}>
-                          {url}
-                        </Tag>
-                      ))}
-                    </Space>
-                  ) : (
-                    <span style={{ color: '#9ca3af' }}>暂无图片</span>
-                  )
-                }}
-              </Form.Item>
-            </div>
+            <Image.PreviewGroup>
+              <Upload.Dragger
+                multiple
+                listType="picture-card"
+                fileList={imageFileList}
+                customRequest={handleImageUpload}
+                onChange={handleImageChange}
+                onRemove={handleImageRemove}
+                accept="image/*"
+                showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
+                style={{ marginTop: 8 }}
+              >
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined />
+                </p>
+                <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
+                <p className="ant-upload-hint">支持多图上传，上传后可预览和删除</p>
+              </Upload.Dragger>
+            </Image.PreviewGroup>
           </Card>
 
           {/* ---------- 描述 ---------- */}
