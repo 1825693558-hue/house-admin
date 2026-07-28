@@ -9,6 +9,7 @@
   --ah-border: #e5e7eb;
   --ah-radius: 10px;
   --ah-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --ah-font-scale: 1;
 }
 
 * {
@@ -336,4 +337,161 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* ========== 字体大小缩放 ========== */
+body {
+  font-size: calc(14px * var(--ah-font-scale));
+}
+
+.ant-layout-header,
+.ant-layout-sider,
+.ant-menu,
+.ant-table,
+.ant-btn,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select,
+.ant-select-selector,
+.ant-form,
+.ant-form-item-label,
+.ant-form-item-control,
+.ant-modal,
+.ant-modal-body,
+.ant-modal-header,
+.ant-modal-title,
+.ant-drawer,
+.ant-drawer-body,
+.ant-tag,
+.ant-badge,
+.ant-pagination,
+.ant-dropdown,
+.ant-popover,
+.ant-tooltip,
+.ant-tabs,
+.ant-descriptions,
+.ant-statistic,
+.ant-card,
+.ant-alert,
+.ant-message,
+.ant-notification,
+.ant-breadcrumb,
+.ant-steps,
+.ant-timeline,
+.ant-transfer,
+.ant-list,
+.ant-empty,
+.ant-result,
+.ant-skeleton,
+.ant-spin,
+.ant-divider,
+.ant-typography,
+h1.ant-typography,
+h2.ant-typography,
+h3.ant-typography,
+h4.ant-typography,
+h5.ant-typography {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-table-thead > tr > th {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-table-tbody > tr > td {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-btn-lg {
+  font-size: calc(16px * var(--ah-font-scale)) !important;
+}
+
+.ant-btn-sm {
+  font-size: calc(12px * var(--ah-font-scale)) !important;
+}
+
+.ant-menu-item {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-modal-title {
+  font-size: calc(16px * var(--ah-font-scale)) !important;
+}
+
+.ant-statistic-title {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-statistic-content {
+  font-size: calc(24px * var(--ah-font-scale)) !important;
+}
+
+.ant-card-head-title {
+  font-size: calc(16px * var(--ah-font-scale)) !important;
+}
+
+.ant-page-header-heading-title {
+  font-size: calc(20px * var(--ah-font-scale)) !important;
+}
+
+.ant-descriptions-title {
+  font-size: calc(16px * var(--ah-font-scale)) !important;
+}
+
+.ant-form-item-label > label {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-select-item {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-dropdown-menu-item {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-pagination-item,
+.ant-pagination-prev,
+.ant-pagination-next,
+.ant-pagination-jump-prev,
+.ant-pagination-jump-next {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ant-tabs-tab {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+/* 自定义组件字体缩放 */
+.ah-toolbar,
+.ah-toolbar-search input {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+.ah-header-nickname {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+/* 响应式表格 */
+.ah-responsive-table .ant-table {
+  font-size: calc(14px * var(--ah-font-scale)) !important;
+}
+
+/* 移动端适配字体缩放 */
+@media (max-width: 768px) {
+  .ah-responsive-table .ant-table-thead > tr > th,
+  .ah-responsive-table .ant-table-tbody > tr > td {
+    font-size: calc(13px * var(--ah-font-scale)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ah-responsive-table .ant-table-thead > tr > th,
+  .ah-responsive-table .ant-table-tbody > tr > td {
+    font-size: calc(12px * var(--ah-font-scale)) !important;
+  }
+
+  .ah-responsive-table .ant-pagination {
+    font-size: calc(12px * var(--ah-font-scale)) !important;
+  }
 }

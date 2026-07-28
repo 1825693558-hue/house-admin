@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Layout, Menu, Button, Input, Badge, Avatar, Dropdown, Drawer } from 'antd'
+import { Layout, Menu, Button, Input, Badge, Avatar, Dropdown, Drawer, Select } from 'antd'
 import { App } from 'antd'
 import type { MenuProps } from 'antd'
 import {
@@ -16,6 +16,7 @@ import {
   SettingOutlined,
   LogoutOutlined,
   DownOutlined,
+  FontSizeOutlined,
 } from '@ant-design/icons'
 import { getUser, removeToken } from '../../utils/auth'
 
@@ -45,10 +46,25 @@ const roleLabelMap: Record<string, string> = {
   USER: '普通用户',
 }
 
+const FONT_SCALE_KEY = 'admin_font_scale'
+const FONT_OPTIONS = [
+  { value: '0.9', label: '小' },
+  { value: '1', label: '标准' },
+  { value: '1.15', label: '大' },
+  { value: '1.3', label: '超大' },
+]
+
+function loadFontScale(): string {
+  const saved = localStorage.getItem(FONT_SCALE_KEY)
+  if (saved && FONT_OPTIONS.some((o) => o.value === saved)) return saved
+  return '1'
+}
+
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [fontScale, setFontScale] = useState<string>(loadFontScale)
   const location = useLocation()
   const navigate = useNavigate()
   const { modal } = App.useApp()
@@ -73,6 +89,12 @@ export default function AppLayout() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // 应用字体缩放
+  useEffect(() => {
+    document.documentElement.style.setProperty('--ah-font-scale', fontScale)
+    localStorage.setItem(FONT_SCALE_KEY, fontScale)
+  }, [fontScale])
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     navigate(e.key)
@@ -257,6 +279,15 @@ export default function AppLayout() {
             <Badge count={5} size="small">
               <Button type="text" icon={<BellOutlined style={{ fontSize: 18 }} />} />
             </Badge>
+            <Select
+              value={fontScale}
+              onChange={(val) => setFontScale(val)}
+              options={FONT_OPTIONS}
+              variant="borderless"
+              style={{ width: 80 }}
+              suffixIcon={<FontSizeOutlined />}
+              popupMatchSelectWidth={false}
+            />
             <Button type="text" icon={<SettingOutlined style={{ fontSize: 18 }} />} className="ah-header-setting" />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
