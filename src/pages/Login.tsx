@@ -39,7 +39,7 @@ export default function Login() {
       const user = await getMe()
       setUser(user)
       message.success('登录成功')
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '登录失败'
       message.error(msg)

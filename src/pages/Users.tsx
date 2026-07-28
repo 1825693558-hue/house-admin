@@ -45,7 +45,7 @@ export default function Users() {
     (item) =>
       item.username.includes(search) ||
       (item.nickname || '').includes(search) ||
-      item.role.includes(search)
+      (roleLabelMap[item.role] || item.role).includes(search)
   )
 
   const handleAdd = () => {

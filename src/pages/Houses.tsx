@@ -19,6 +19,8 @@ export default function Houses({ type }: HousesProps) {
   const [data, setData] = useState<HouseItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [decorationFilter, setDecorationFilter] = useState<string | undefined>(undefined)
@@ -31,10 +33,10 @@ export default function Houses({ type }: HousesProps) {
   const addButtonText = isSale ? '新增出售房源' : '新增出租房源'
   const statusOptions = isSale ? saleStatusOptions : rentStatusOptions
 
-  const fetchData = async () => {
+  const fetchData = async (page = currentPage, size = pageSize) => {
     setLoading(true)
     try {
-      const params: Record<string, unknown> = { page: 1, size: 20, house_use_type: type }
+      const params: Record<string, unknown> = { page, size, house_use_type: type }
       if (search) params.keyword = search
       if (statusFilter) params.status = statusFilter
       if (decorationFilter) params.decoration = decorationFilter
@@ -43,6 +45,8 @@ export default function Houses({ type }: HousesProps) {
       const res = await getHouses(params)
       setData(res.items)
       setTotal(res.total)
+      setCurrentPage(page)
+      setPageSize(size)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '加载失败'
       message.error(msg)
@@ -51,16 +55,21 @@ export default function Houses({ type }: HousesProps) {
     }
   }
 
+  // 类型变化时重置到第 1 页
   useEffect(() => {
-    fetchData()
+    setCurrentPage(1)
+    fetchData(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, decorationFilter, keyFilter, type])
 
   // 防抖搜索
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchData()
+      setCurrentPage(1)
+      fetchData(1)
     }, 500)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
 
   const handleReset = () => {
@@ -68,8 +77,14 @@ export default function Houses({ type }: HousesProps) {
     setStatusFilter(undefined)
     setDecorationFilter(undefined)
     setKeyFilter(undefined)
+    setCurrentPage(1)
+    // 由于 state 是异步的，直接传入重置后的参数调用
+    setTimeout(() => fetchData(1), 0)
     message.success('筛选已重置')
-    fetchData()
+  }
+
+  const handleTableChange = (page: number, size: number) => {
+    fetchData(page, size)
   }
 
   const handleDelete = async (id: number) => {
@@ -263,10 +278,12 @@ export default function Houses({ type }: HousesProps) {
             dataSource={data}
             rowKey="id"
             pagination={{
+              current: currentPage,
+              pageSize: pageSize,
               total,
-              pageSize: 20,
               showSizeChanger: true,
               showTotal: (t) => `共 ${t} 条`,
+              onChange: handleTableChange,
             }}
           />
         </Card>

@@ -144,7 +144,7 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
                 name: c.name,
                 phone: c.phone,
                 role: c.role,
-                is_primary: c.is_primary,
+                is_primary: c.is_primary ? 1 : 0,
               }))
             : [{ name: '', phone: '', role: '', is_primary: 0 }],
           appliance_ids: applianceIds,
@@ -238,7 +238,14 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
         video_url: values.video_url || null,
         images: values.images || [],
         description: values.description || null,
-        contacts: (values.contacts || []).filter((c) => c.name.trim()),
+        contacts: (values.contacts || [])
+          .filter((c) => c.name.trim())
+          .map((c) => ({
+            name: c.name,
+            phone: c.phone || null,
+            role: c.role || null,
+            is_primary: c.is_primary ? 1 : 0,
+          })),
         appliance_ids: (values.appliance_ids || []).map((aid) => ({ appliance_id: aid })),
       }
 
@@ -396,9 +403,11 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
                 </Form.Item>
               </Col>
               <Col span={16}>
-                <Form.Item label="视频" name="video_url">
+                <Form.Item label="视频">
                   <Space.Compact style={{ width: '100%' }}>
-                    <Input placeholder="视频 URL，可手动输入或上传自动填充" />
+                    <Form.Item name="video_url" noStyle>
+                      <Input placeholder="视频 URL，可手动输入或上传自动填充" />
+                    </Form.Item>
                     <Upload
                       customRequest={handleVideoUpload}
                       showUploadList={false}

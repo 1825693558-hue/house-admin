@@ -28,8 +28,9 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true)
+        // 获取全量房源用于统计（size 设大值覆盖常见数据量）
         const [houseRes, communityRes] = await Promise.all([
-          getHouses({ page: 1, size: 5 }),
+          getHouses({ page: 1, size: 1000 }),
           getCommunities({ page: 1, size: 1 }),
         ])
 
@@ -37,6 +38,7 @@ export default function Dashboard() {
         const total = houseRes.total
         const communitiesTotal = communityRes.total
 
+        // 基于全量数据统计
         const forSale = houses.filter((h) => h.status === '在售').length
         const forRent = houses.filter((h) => h.status === '出租中').length
 
@@ -47,16 +49,17 @@ export default function Dashboard() {
           totalCommunities: communitiesTotal,
         })
 
+        // 最近录入 5 条（后端按 created_at desc 返回）
         setRecentHouses(houses.slice(0, 5))
 
-        // 状态分布
+        // 状态分布（基于全量数据）
         const statusMap: Record<string, { label: string; color: string }> = {
           '在售': { label: '在售', color: '#1677ff' },
           '已售': { label: '已售', color: '#52c41a' },
           '空闲': { label: '空闲', color: '#8c8c8c' },
           '出租中': { label: '出租中', color: '#722ed1' },
           '已租': { label: '已租', color: '#fa8c16' },
-          '下架': { label: '下架', color: '#f5222d' },
+          '下架': { label: '下架', color: '#f5225d' },
         }
         const dist = Object.entries(statusMap).map(([key, val]) => ({
           label: val.label,
@@ -118,10 +121,17 @@ export default function Dashboard() {
     },
     { title: '面积(m²)', dataIndex: 'area', key: 'area' },
     {
-      title: '价格(万)',
-      dataIndex: 'price',
+      title: '价格',
       key: 'price',
-      render: (v: number) => <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{v}</span>,
+      render: (_: unknown, record: HouseItem) => {
+        if (record.sale_price != null) {
+          return <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{record.sale_price}万</span>
+        }
+        if (record.rent_price != null) {
+          return <span style={{ color: '#2980b9', fontWeight: 600 }}>{record.rent_price}/月</span>
+        }
+        return <span style={{ color: '#9ca3af' }}>-</span>
+      },
     },
     {
       title: '状态',

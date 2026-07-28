@@ -55,8 +55,7 @@ export const decorationClassMap: Record<string, string> = {
 }
 
 export const keyClassMap: Record<string, string> = {
-  '钥匙在店': 'key-inshop',
-  '联系房东': 'key-contact',
+  '物理钥匙': 'key-inshop',
   '密码锁': 'key-password',
-  '临时密码': 'key-temp',
+  '无钥匙': 'key-temp',
 }
