@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm } from 'antd'
+import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm, Modal, Progress, Dropdown, type MenuProps } from 'antd'
 import { App } from 'antd'
-import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons'
 import { getHouses, deleteHouse } from '../api/house'
 import type { HouseItem } from '../api/house'
+import { createExportTask, getExportStatus, downloadExportFile } from '../api/export'
+import type { ExportTaskStatus } from '../api/export'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
 
 interface HousesProps {
@@ -27,6 +29,13 @@ export default function Houses({ type }: HousesProps) {
   const [keyFilter, setKeyFilter] = useState<string | undefined>(undefined)
   const [filterVisible, setFilterVisible] = useState(false)
   const { message } = App.useApp()
+
+  // 导出相关状态
+  const [exportModalVisible, setExportModalVisible] = useState(false)
+  const [exportStatus, setExportStatus] = useState<ExportTaskStatus | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isSale = type === 'sale'
   const pageTitle = isSale ? '出售房源' : '出租房源'
@@ -72,6 +81,15 @@ export default function Houses({ type }: HousesProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
 
+  // 组件卸载时清理轮询
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current)
+      }
+    }
+  }, [])
+
   const handleReset = () => {
     setSearch('')
     setStatusFilter(undefined)
@@ -97,6 +115,104 @@ export default function Houses({ type }: HousesProps) {
       message.error(msg)
     }
   }
+
+  // ---------- 导出逻辑 ----------
+
+  const stopPolling = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
+  }, [])
+
+  const pollExportStatus = useCallback(async (taskId: string) => {
+    try {
+      const status = await getExportStatus(taskId)
+      setExportStatus(status)
+
+      if (status.status === 'done') {
+        stopPolling()
+        setExporting(false)
+        return
+      }
+
+      if (status.status === 'failed') {
+        stopPolling()
+        setExporting(false)
+        message.error(`导出失败: ${status.error || '未知错误'}`)
+        return
+      }
+
+      // 继续轮询（每 2 秒）
+      pollTimerRef.current = setTimeout(() => pollExportStatus(taskId), 2000)
+    } catch (err: unknown) {
+      stopPolling()
+      setExporting(false)
+      const msg = err instanceof Error ? err.message : '查询进度失败'
+      message.error(msg)
+    }
+  }, [stopPolling, message])
+
+  const handleExport = async (exportType: 'all' | 'filtered') => {
+    setExportModalVisible(true)
+    setExporting(true)
+    setExportStatus(null)
+
+    try {
+      const params: Record<string, unknown> = { export_type: exportType }
+      if (exportType === 'filtered') {
+        if (search) params.keyword = search
+        if (statusFilter) params.status = statusFilter
+        if (decorationFilter) params.decoration = decorationFilter
+        if (keyFilter) params.key_type = keyFilter
+        params.house_use_type = type
+      }
+
+      const { task_id } = await createExportTask(params)
+      message.success('导出任务已创建，正在后台处理...')
+      pollExportStatus(task_id)
+    } catch (err: unknown) {
+      setExporting(false)
+      const msg = err instanceof Error ? err.message : '创建导出任务失败'
+      message.error(msg)
+    }
+  }
+
+  const handleDownload = async () => {
+    if (!exportStatus?.task_id) return
+    setDownloading(true)
+    try {
+      await downloadExportFile(exportStatus.task_id)
+      message.success('下载完成')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '下载失败'
+      message.error(msg)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleCloseExportModal = () => {
+    if (exporting) {
+      message.warning('导出正在进行中，请等待完成')
+      return
+    }
+    setExportModalVisible(false)
+    setExportStatus(null)
+  }
+
+  const exportMenuItems: MenuProps['items'] = [
+    {
+      key: 'filtered',
+      label: '导出当前筛选',
+      onClick: () => handleExport('filtered'),
+    },
+    {
+      key: 'all',
+      label: '导出全部房源',
+      onClick: () => handleExport('all'),
+    },
+  ]
 
   const priceColumn = isSale
     ? {
@@ -196,6 +312,14 @@ export default function Houses({ type }: HousesProps) {
     },
   ]
 
+  // 导出进度弹窗的状态图标
+  const renderExportIcon = () => {
+    if (!exportStatus) return <LoadingOutlined style={{ fontSize: 32, color: '#2d8f5e' }} />
+    if (exportStatus.status === 'done') return <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />
+    if (exportStatus.status === 'failed') return <CloseCircleOutlined style={{ fontSize: 32, color: '#ff4d4f' }} />
+    return <LoadingOutlined style={{ fontSize: 32, color: '#2d8f5e' }} />
+  }
+
   return (
     <Spin spinning={loading}>
       <div>
@@ -216,6 +340,11 @@ export default function Houses({ type }: HousesProps) {
             <Button icon={<ReloadOutlined />} onClick={handleReset}>
               重置
             </Button>
+            <Dropdown menu={{ items: exportMenuItems }} placement="bottomRight">
+              <Button icon={<DownloadOutlined />}>
+                导出
+              </Button>
+            </Dropdown>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`/houses/new?type=${type}`)}>
               {addButtonText}
             </Button>
@@ -287,6 +416,80 @@ export default function Houses({ type }: HousesProps) {
             }}
           />
         </Card>
+
+        {/* 导出进度弹窗 */}
+        <Modal
+          title="导出房源数据"
+          open={exportModalVisible}
+          onCancel={handleCloseExportModal}
+          footer={
+            exportStatus?.status === 'done' ? (
+              <Space>
+                <Button onClick={handleCloseExportModal}>关闭</Button>
+                <Button type="primary" icon={<DownloadOutlined />} loading={downloading} onClick={handleDownload}>
+                  下载 ZIP 文件
+                </Button>
+              </Space>
+            ) : exportStatus?.status === 'failed' ? (
+              <Button onClick={handleCloseExportModal}>关闭</Button>
+            ) : (
+              <Button disabled>请等待导出完成...</Button>
+            )
+          }
+          width={480}
+          maskClosable={false}
+          centered
+        >
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ marginBottom: 16 }}>
+              {renderExportIcon()}
+            </div>
+
+            {exportStatus ? (
+              <>
+                <p style={{ fontSize: 14, color: '#333', marginBottom: 8 }}>
+                  {exportStatus.message}
+                </p>
+
+                {exportStatus.status === 'processing' && (
+                  <div style={{ marginTop: 16 }}>
+                    <Progress
+                      percent={exportStatus.progress}
+                      status="active"
+                      strokeColor="#2d8f5e"
+                    />
+                    {exportStatus.total_houses > 0 && (
+                      <p style={{ color: '#6b7280', marginTop: 8, fontSize: 13 }}>
+                        已处理 {exportStatus.processed_houses} / {exportStatus.total_houses} 条房源
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {exportStatus.status === 'done' && (
+                  <div style={{ marginTop: 16, padding: '12px 16px', background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
+                    <p style={{ margin: 0, color: '#52c41a' }}>
+                      导出完成！共 {exportStatus.total_houses} 条房源
+                    </p>
+                    <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 13 }}>
+                      点击下方按钮下载 ZIP 压缩包（含 Excel + 图片/视频）
+                    </p>
+                  </div>
+                )}
+
+                {exportStatus.status === 'failed' && (
+                  <div style={{ marginTop: 16, padding: '12px 16px', background: '#fff2f0', borderRadius: 6, border: '1px solid #ffccc7' }}>
+                    <p style={{ margin: 0, color: '#ff4d4f' }}>
+                      导出失败: {exportStatus.error || '未知错误'}
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ color: '#6b7280' }}>正在创建导出任务...</p>
+            )}
+          </div>
+        </Modal>
       </div>
     </Spin>
   )
