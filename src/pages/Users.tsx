@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, Table, Modal, Form, Select, Tag, Space, Spin, Popconfirm, Dropdown } from 'antd'
+import { Card, Button, Input, Table, Modal, Form, Select, Tag, Spin, Dropdown } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import { App } from 'antd'
 import { PlusOutlined, SearchOutlined, EditOutlined, KeyOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons'
 import { getUsers, createUser, updateUser, deleteUser } from '../api/user'
@@ -118,7 +119,7 @@ export default function Users() {
     }
   }
 
-  const columns = [
+  const columns: ColumnsType<UserItem> = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '用户名',

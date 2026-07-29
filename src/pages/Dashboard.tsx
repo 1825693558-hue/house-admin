@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Card, Row, Col, Table, Tag, Spin } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import { App } from 'antd'
 import {
   HomeOutlined,
@@ -111,7 +112,7 @@ export default function Dashboard() {
 
   const maxValue = Math.max(...statusDistribution.map((d) => d.value), 1)
 
-  const columns = [
+  const columns: ColumnsType<HouseItem> = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '小区',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Card, Button, Input, InputNumber, Table, Modal, Form, Dropdown, Spin } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import { App } from 'antd'
 import { PlusOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
 import { getCommunities, createCommunity, updateCommunity, deleteCommunity } from '../api/community'
@@ -86,7 +87,7 @@ export default function Communities() {
     }
   }
 
-  const columns = [
+  const columns: ColumnsType<CommunityItem> = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '名称',

@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm, Modal, Progress, Dropdown, Image, Descriptions, Divider, type MenuProps } from 'antd'
+import { Card, Button, Input, Table, Tag, Select, Space, Spin, Modal, Progress, Dropdown, Image, Descriptions, Divider, type MenuProps } from 'antd'
 import { App } from 'antd'
 import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, VideoCameraOutlined, MoreOutlined } from '@ant-design/icons'
 import { getHouses, deleteHouse, getHouseDetail } from '../api/house'
 import type { HouseItem, HouseDetail } from '../api/house'
+import type { ColumnsType } from 'antd/es/table'
 import { createExportTask, getExportStatus, downloadExportFile } from '../api/export'
 import type { ExportTaskStatus } from '../api/export'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
@@ -251,7 +252,7 @@ export default function Houses({ type }: HousesProps) {
         render: (v: number) => <span style={{ color: '#2980b9', fontWeight: 600 }}>{v || '-'}</span>,
       }
 
-  const columns = [
+  const columns: ColumnsType<HouseItem> = [
     { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '小区',
