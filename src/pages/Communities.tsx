@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, InputNumber, Table, Modal, Form, Popconfirm, Space, Spin } from 'antd'
+import { Card, Button, Input, InputNumber, Table, Modal, Form, Dropdown, Spin } from 'antd'
 import { App } from 'antd'
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
 import { getCommunities, createCommunity, updateCommunity, deleteCommunity } from '../api/community'
 import type { CommunityItem } from '../api/community'
 
@@ -102,29 +102,41 @@ export default function Communities() {
       width: 80,
       render: (sort: number) => <span style={{ color: '#9ca3af', fontSize: 13 }}>{sort}</span>,
     },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160 },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160, responsive: ['md'] },
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 80,
       fixed: 'right' as const,
       render: (_: unknown, record: CommunityItem) => (
-        <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除"
-            description={`确定要删除小区 "${record.name}" 吗？`}
-            onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
-          >
-            <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                label: '编辑',
+                onClick: () => handleEdit(record),
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                danger: true,
+                onClick: () => {
+                  Modal.confirm({
+                    title: '确认删除',
+                    content: `确定要删除小区 "${record.name}" 吗？`,
+                    okText: '删除',
+                    okType: 'danger',
+                    cancelText: '取消',
+                    onOk: () => handleDelete(record.id),
+                  })
+                },
+              },
+            ],
+          }}
+        >
+          <Button type="text" size="small" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ]
