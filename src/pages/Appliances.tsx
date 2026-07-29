@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Modal, Form, Input, InputNumber, Table, Space, Spin, Popconfirm } from 'antd'
+import { Card, Button, Modal, Form, Input, InputNumber, Table, Spin, Dropdown, type MenuProps } from 'antd'
 import { App } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { getAppliances, createAppliance, updateAppliance, deleteAppliance } from '../api/appliance'
 import type { ApplianceItem } from '../api/appliance'
@@ -85,6 +85,7 @@ export default function Appliances() {
             dataSource={data}
             rowKey="id"
             pagination={false}
+            scroll={{ x: 'max-content' }}
             columns={[
               {
                 title: '图标',
@@ -101,30 +102,48 @@ export default function Appliances() {
                 title: '排序',
                 dataIndex: 'sort_order',
                 width: 100,
+                responsive: ['md'],
                 render: (sort: number) => <span style={{ color: '#9ca3af', fontSize: 13 }}>{sort}</span>,
               },
               {
                 title: '操作',
                 key: 'action',
-                width: 160,
-                render: (_: unknown, record: ApplianceItem) => (
-                  <Space>
-                    <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-                      编辑
-                    </Button>
-                    <Popconfirm
-                      title="确认删除"
-                      description={`确定要删除家电类型 "${record.name}" 吗？`}
-                      onConfirm={() => handleDelete(record.id)}
-                      okText="删除"
-                      cancelText="取消"
-                    >
-                      <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-                        删除
-                      </Button>
-                    </Popconfirm>
-                  </Space>
-                ),
+                width: 80,
+                render: (_: unknown, record: ApplianceItem) => {
+                  const menuItems: MenuProps['items'] = [
+                    {
+                      key: 'edit',
+                      icon: <EditOutlined />,
+                      label: '编辑',
+                      onClick: () => handleEdit(record),
+                    },
+                    {
+                      type: 'divider',
+                      key: 'divider',
+                    },
+                    {
+                      key: 'delete',
+                      icon: <DeleteOutlined />,
+                      label: '删除',
+                      danger: true,
+                      onClick: () => {
+                        Modal.confirm({
+                          title: '确认删除',
+                          content: `确定要删除家电类型 "${record.name}" 吗？`,
+                          okText: '删除',
+                          okType: 'danger',
+                          cancelText: '取消',
+                          onOk: () => handleDelete(record.id),
+                        })
+                      },
+                    },
+                  ]
+                  return (
+                    <Dropdown menu={{ items: menuItems }} placement="bottomRight">
+                      <Button type="text" size="small" icon={<MoreOutlined />} />
+                    </Dropdown>
+                  )
+                },
               },
             ] as ColumnsType<ApplianceItem>}
           />
