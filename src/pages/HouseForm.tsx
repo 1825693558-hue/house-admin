@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Form, Input, InputNumber, Select, Button, Card, Space, Spin,
-  Divider, Tag, Row, Col, Checkbox, App, Upload, Image
+  Divider, Tag, Row, Col, Checkbox, App, Upload, Image, Modal
 } from 'antd'
 import type { UploadProps, UploadFile } from 'antd'
 import {
   PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined,
-  InboxOutlined, UploadOutlined
+  InboxOutlined, UploadOutlined, VideoCameraOutlined, DeleteOutlined, EyeOutlined
 } from '@ant-design/icons'
 import { createHouse, updateHouse, getHouseDetail, type HouseDetail } from '../api/house'
 import { getCommunities, type CommunityItem } from '../api/community'
@@ -68,11 +68,13 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
   const [videoUploading, setVideoUploading] = useState(false)
+  const [videoPreviewVisible, setVideoPreviewVisible] = useState(false)
   const [actualType, setActualType] = useState<'sale' | 'rent'>(propType || 'sale')
 
   const isSale = actualType === 'sale'
   const statusOptions = isSale ? saleStatusOptions : rentStatusOptions
   const listPath = isSale ? '/houses/sale' : '/houses/rent'
+  const videoUrl = Form.useWatch('video_url', form)
 
   // 加载小区和家电列表
   useEffect(() => {
@@ -420,7 +422,31 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
                         {videoUploading ? '上传中' : '上传视频'}
                       </Button>
                     </Upload>
+                    {videoUrl && (
+                      <>
+                        <Button
+                          icon={<EyeOutlined />}
+                          onClick={() => setVideoPreviewVisible(true)}
+                        >
+                          预览
+                        </Button>
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => form.setFieldValue('video_url', null)}
+                        />
+                      </>
+                    )}
                   </Space.Compact>
+                  {videoUrl && (
+                    <div style={{ marginTop: 8 }}>
+                      <video
+                        src={videoUrl}
+                        style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
+                        controls
+                      />
+                    </div>
+                  )}
                 </Form.Item>
               </Col>
             </Row>
@@ -533,6 +559,25 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
             </Space>
           </Form.Item>
         </Form>
+
+        {/* 视频全屏预览弹窗 */}
+        <Modal
+          open={videoPreviewVisible}
+          onCancel={() => setVideoPreviewVisible(false)}
+          footer={null}
+          width="80%"
+          title={<span><VideoCameraOutlined style={{ marginRight: 8 }} />视频预览</span>}
+          destroyOnClose
+        >
+          {videoUrl && (
+            <video
+              src={videoUrl}
+              style={{ width: '100%', maxHeight: '70vh' }}
+              controls
+              autoPlay
+            />
+          )}
+        </Modal>
       </div>
     </Spin>
   )
