@@ -112,17 +112,19 @@ export default function Dashboard() {
   const maxValue = Math.max(...statusDistribution.map((d) => d.value), 1)
 
   const columns = [
-    { title: '编号', dataIndex: 'id', key: 'id' },
+    { title: '编号', dataIndex: 'id', key: 'id', width: 80 },
     {
       title: '小区',
       dataIndex: 'community_name',
       key: 'community_name',
+      ellipsis: true,
       render: (text: string) => <span style={{ fontWeight: 600 }}>{text || '-'}</span>,
     },
-    { title: '面积(m²)', dataIndex: 'area', key: 'area' },
+    { title: '面积(m²)', dataIndex: 'area', key: 'area', responsive: ['md'] },
     {
       title: '价格',
       key: 'price',
+      responsive: ['md'],
       render: (_: unknown, record: HouseItem) => {
         if (record.sale_price != null) {
           return <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{record.sale_price}万</span>
@@ -143,7 +145,7 @@ export default function Dashboard() {
         </Tag>
       ),
     },
-    { title: '录入时间', dataIndex: 'created_at', key: 'created_at' },
+    { title: '录入时间', dataIndex: 'created_at', key: 'created_at', responsive: ['md'] },
   ]
 
   return (
@@ -220,6 +222,7 @@ export default function Dashboard() {
                 rowKey="id"
                 pagination={false}
                 size="middle"
+                scroll={{ x: 800 }}
               />
             </Card>
           </Col>
