@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Input, Table, Modal, Form, Select, Tag, Space, Spin, Popconfirm } from 'antd'
+import { Card, Button, Input, Table, Modal, Form, Select, Tag, Space, Spin, Popconfirm, Dropdown } from 'antd'
 import { App } from 'antd'
-import { PlusOutlined, SearchOutlined, EditOutlined, KeyOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, SearchOutlined, EditOutlined, KeyOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons'
 import { getUsers, createUser, updateUser, deleteUser } from '../api/user'
 import type { UserItem } from '../api/user'
 
@@ -124,6 +124,7 @@ export default function Users() {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
+      ellipsis: true,
       render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span>,
     },
     { title: '昵称', dataIndex: 'nickname', key: 'nickname' },
@@ -133,31 +134,49 @@ export default function Users() {
       key: 'role',
       render: (v: string) => <Tag className={roleTagMap[v] || ''}>{roleLabelMap[v] || v}</Tag>,
     },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160 },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160, responsive: ['md'] },
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 80,
       render: (_: unknown, record: UserItem) => (
-        <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Button type="text" size="small" icon={<KeyOutlined />} onClick={() => handleResetPassword(record)}>
-            重置密码
-          </Button>
-          <Popconfirm
-            title="确认删除"
-            description={`确定要删除用户 "${record.nickname || record.username}" 吗？`}
-            onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
-          >
-            <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: '编辑',
+                onClick: () => handleEdit(record),
+              },
+              {
+                key: 'reset',
+                icon: <KeyOutlined />,
+                label: '重置密码',
+                onClick: () => handleResetPassword(record),
+              },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: '删除',
+                danger: true,
+                onClick: () => {
+                  Modal.confirm({
+                    title: '确认删除',
+                    content: `确定要删除用户 "${record.nickname || record.username}" 吗？`,
+                    okText: '删除',
+                    cancelText: '取消',
+                    okButtonProps: { danger: true },
+                    onOk: () => handleDelete(record.id),
+                  })
+                },
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <Button type="text" size="small" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ]
@@ -184,6 +203,7 @@ export default function Users() {
             dataSource={filtered}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: true }}
+            scroll={{ x: 900 }}
           />
         </Card>
 
