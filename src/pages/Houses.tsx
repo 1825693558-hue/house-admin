@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm, Modal, Progress, Dropdown, Image, Descriptions, Divider, type MenuProps } from 'antd'
 import { App } from 'antd'
-import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, VideoCameraOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, VideoCameraOutlined, MoreOutlined } from '@ant-design/icons'
 import { getHouses, deleteHouse, getHouseDetail } from '../api/house'
 import type { HouseItem, HouseDetail } from '../api/house'
 import { createExportTask, getExportStatus, downloadExportFile } from '../api/export'
@@ -257,9 +257,16 @@ export default function Houses({ type }: HousesProps) {
       title: '小区',
       dataIndex: 'community_name',
       key: 'community_name',
+      ellipsis: true,
       render: (text: string) => <span style={{ fontWeight: 600 }}>{text || '-'}</span>,
     },
-    { title: '地址', dataIndex: 'address', key: 'address' },
+    {
+      title: '地址',
+      dataIndex: 'address',
+      key: 'address',
+      ellipsis: true,
+      responsive: ['md'],
+    },
     { title: '面积(m²)', dataIndex: 'area', key: 'area', width: 100 },
     priceColumn,
     {
@@ -267,6 +274,7 @@ export default function Houses({ type }: HousesProps) {
       dataIndex: 'price_note',
       key: 'price_note',
       width: 120,
+      responsive: ['md'],
       render: (v: string) => <span style={{ color: '#6b7280' }}>{v || '-'}</span>,
     },
     {
@@ -285,6 +293,7 @@ export default function Houses({ type }: HousesProps) {
       dataIndex: 'decoration',
       key: 'decoration',
       width: 90,
+      responsive: ['md'],
       render: (v: string) => v ? <Tag className={decorationClassMap[v] || ''}>{v}</Tag> : '-',
     },
     {
@@ -292,44 +301,55 @@ export default function Houses({ type }: HousesProps) {
       dataIndex: 'key_type',
       key: 'key_type',
       width: 110,
+      responsive: ['md'],
       render: (v: string) => v ? <Tag className={keyClassMap[v] || ''}>{v}</Tag> : '-',
     },
     {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 80,
       fixed: 'right' as const,
-      render: (_: unknown, record: HouseItem) => (
-        <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetail(record.id)}
-          >
-            查看
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/houses/edit/${record.id}`)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除"
-            description="确定要删除该房源吗？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
-          >
-            <Button type="text" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_: unknown, record: HouseItem) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: '查看详情',
+            onClick: () => handleViewDetail(record.id),
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: '编辑',
+            onClick: () => navigate(`/houses/edit/${record.id}`),
+          },
+          {
+            type: 'divider',
+            key: 'divider',
+          },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: '删除',
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: '确认删除',
+                content: '确定要删除该房源吗？',
+                okText: '删除',
+                okType: 'danger',
+                cancelText: '取消',
+                onOk: () => handleDelete(record.id),
+              })
+            },
+          },
+        ]
+        return (
+          <Dropdown menu={{ items: menuItems }} placement="bottomRight">
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        )
+      },
     },
   ]
 
@@ -427,6 +447,7 @@ export default function Houses({ type }: HousesProps) {
             columns={columns}
             dataSource={data}
             rowKey="id"
+            scroll={{ x: 1200 }}
             pagination={{
               current: currentPage,
               pageSize: pageSize,
@@ -492,7 +513,7 @@ export default function Houses({ type }: HousesProps) {
                 {/* 联系人 */}
                 {currentDetail.contacts && currentDetail.contacts.length > 0 && (
                   <>
-                    <Divider orientation="left">联系人</Divider>
+                    <Divider>联系人</Divider>
                     {currentDetail.contacts.map((c, i) => (
                       <div key={i} style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Tag color={c.is_primary ? 'green' : 'default'}>{c.is_primary ? '主要' : '联系人'}</Tag>
@@ -507,7 +528,7 @@ export default function Houses({ type }: HousesProps) {
                 {/* 关联家电 */}
                 {currentDetail.appliances && currentDetail.appliances.length > 0 && (
                   <>
-                    <Divider orientation="left">关联家电</Divider>
+                    <Divider>关联家电</Divider>
                     <Space wrap>
                       {currentDetail.appliances.map((a) => (
                         <Tag key={a.id} color="blue">
@@ -522,7 +543,7 @@ export default function Houses({ type }: HousesProps) {
                 {/* 房源图片 */}
                 {currentDetail.images && currentDetail.images.length > 0 && (
                   <>
-                    <Divider orientation="left">房源图片 ({currentDetail.images.length})</Divider>
+                    <Divider>房源图片 ({currentDetail.images.length})</Divider>
                     <Image.PreviewGroup>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {currentDetail.images.map((url, i) => (
@@ -543,7 +564,7 @@ export default function Houses({ type }: HousesProps) {
                 {/* 视频 */}
                 {currentDetail.video_url && (
                   <>
-                    <Divider orientation="left">
+                    <Divider>
                       <Space>
                         <VideoCameraOutlined />
                         视频
@@ -560,7 +581,7 @@ export default function Houses({ type }: HousesProps) {
                 {/* 描述 */}
                 {currentDetail.description && (
                   <>
-                    <Divider orientation="left">房源描述</Divider>
+                    <Divider>房源描述</Divider>
                     <p style={{ whiteSpace: 'pre-wrap', color: '#374151' }}>{currentDetail.description}</p>
                   </>
                 )}

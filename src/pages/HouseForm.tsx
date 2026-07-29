@@ -65,6 +65,8 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
   const [communities, setCommunities] = useState<CommunityItem[]>([])
   const [appliances, setAppliances] = useState<ApplianceItem[]>([])
   const [imageFileList, setImageFileList] = useState<UploadFile[]>([])
+  const [previewVisible, setPreviewVisible] = useState(false)
+  const [previewImage, setPreviewImage] = useState('')
   const [videoUploading, setVideoUploading] = useState(false)
   const [actualType, setActualType] = useState<'sale' | 'rent'>(propType || 'sale')
 
@@ -430,6 +432,15 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
               <Input type="hidden" />
             </Form.Item>
             <Image.PreviewGroup>
+              {/* 隐藏的 Image 组件，用于控制弹窗预览 */}
+              <Image
+                style={{ display: 'none' }}
+                src={previewImage}
+                preview={{
+                  visible: previewVisible,
+                  onVisibleChange: (visible) => setPreviewVisible(visible),
+                }}
+              />
               <Upload.Dragger
                 multiple
                 listType="picture-card"
@@ -437,6 +448,10 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
                 customRequest={handleImageUpload}
                 onChange={handleImageChange}
                 onRemove={handleImageRemove}
+                onPreview={(file) => {
+                  setPreviewImage(file.url || file.thumbUrl || '')
+                  setPreviewVisible(true)
+                }}
                 accept="image/*"
                 showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
                 style={{ marginTop: 8 }}
