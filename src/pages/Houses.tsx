@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm, Modal, Progress, Dropdown, type MenuProps } from 'antd'
+import { Card, Button, Input, Table, Tag, Select, Space, Spin, Popconfirm, Modal, Progress, Dropdown, Image, Descriptions, Divider, type MenuProps } from 'antd'
 import { App } from 'antd'
-import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons'
-import { getHouses, deleteHouse } from '../api/house'
-import type { HouseItem } from '../api/house'
+import { SearchOutlined, FilterOutlined, ReloadOutlined, EyeOutlined, DeleteOutlined, PlusOutlined, EditOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, VideoCameraOutlined } from '@ant-design/icons'
+import { getHouses, deleteHouse, getHouseDetail } from '../api/house'
+import type { HouseItem, HouseDetail } from '../api/house'
 import { createExportTask, getExportStatus, downloadExportFile } from '../api/export'
 import type { ExportTaskStatus } from '../api/export'
 import { statusClassMap, decorationClassMap, keyClassMap } from '../types'
@@ -36,6 +36,11 @@ export default function Houses({ type }: HousesProps) {
   const [exporting, setExporting] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 详情查看相关状态
+  const [detailVisible, setDetailVisible] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [currentDetail, setCurrentDetail] = useState<HouseDetail | null>(null)
 
   const isSale = type === 'sale'
   const pageTitle = isSale ? '出售房源' : '出租房源'
@@ -113,6 +118,22 @@ export default function Houses({ type }: HousesProps) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '删除失败'
       message.error(msg)
+    }
+  }
+
+  const handleViewDetail = async (id: number) => {
+    setDetailVisible(true)
+    setDetailLoading(true)
+    setCurrentDetail(null)
+    try {
+      const detail = await getHouseDetail(id)
+      setCurrentDetail(detail)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '加载详情失败'
+      message.error(msg)
+      setDetailVisible(false)
+    } finally {
+      setDetailLoading(false)
     }
   }
 
@@ -284,7 +305,7 @@ export default function Houses({ type }: HousesProps) {
             type="text"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => message.info(`查看房源: ${record.community_name || record.id}`)}
+            onClick={() => handleViewDetail(record.id)}
           >
             查看
           </Button>
@@ -416,6 +437,143 @@ export default function Houses({ type }: HousesProps) {
             }}
           />
         </Card>
+
+        {/* 房源详情查看弹窗 */}
+        <Modal
+          title="房源详情"
+          open={detailVisible}
+          onCancel={() => setDetailVisible(false)}
+          footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>}
+          width={800}
+          centered
+        >
+          <Spin spinning={detailLoading}>
+            {currentDetail && (
+              <div>
+                {/* 基本信息 */}
+                <Descriptions title="基本信息" column={2} size="small" bordered>
+                  <Descriptions.Item label="编号">{currentDetail.id}</Descriptions.Item>
+                  <Descriptions.Item label="小区">{currentDetail.community?.name || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="地址">{currentDetail.address || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="面积">{currentDetail.area ? `${currentDetail.area} m²` : '-'}</Descriptions.Item>
+                  <Descriptions.Item label="楼层">{currentDetail.floor ?? '-'}/{currentDetail.total_floors ?? '-'}</Descriptions.Item>
+                  <Descriptions.Item label="房源类型">{currentDetail.house_type || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="状态">
+                    <Tag className={statusClassMap[currentDetail.status] || ''} style={{ borderWidth: 1, borderStyle: 'solid' }}>
+                      {currentDetail.status}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="装修">
+                    {currentDetail.decoration ? <Tag className={decorationClassMap[currentDetail.decoration] || ''}>{currentDetail.decoration}</Tag> : '-'}
+                  </Descriptions.Item>
+                </Descriptions>
+
+                {/* 价格信息 */}
+                <Descriptions title="价格信息" column={2} size="small" bordered style={{ marginTop: 16 }}>
+                  <Descriptions.Item label="出售价">
+                    {currentDetail.sale_price ? <span style={{ color: '#2d8f5e', fontWeight: 600 }}>{currentDetail.sale_price} 万</span> : '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="出租价">
+                    {currentDetail.rent_price ? <span style={{ color: '#2980b9', fontWeight: 600 }}>{currentDetail.rent_price} 元/月</span> : '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="价格备注" span={2}>{currentDetail.price_note || '-'}</Descriptions.Item>
+                </Descriptions>
+
+                {/* 钥匙信息 */}
+                <Descriptions title="钥匙信息" column={2} size="small" bordered style={{ marginTop: 16 }}>
+                  <Descriptions.Item label="钥匙类型">
+                    {currentDetail.key_type ? <Tag className={keyClassMap[currentDetail.key_type] || ''}>{currentDetail.key_type}</Tag> : '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="密码锁密码">
+                    {currentDetail.lock_password ? <span style={{ fontFamily: 'monospace' }}>{currentDetail.lock_password}</span> : '-'}
+                  </Descriptions.Item>
+                </Descriptions>
+
+                {/* 联系人 */}
+                {currentDetail.contacts && currentDetail.contacts.length > 0 && (
+                  <>
+                    <Divider orientation="left">联系人</Divider>
+                    {currentDetail.contacts.map((c, i) => (
+                      <div key={i} style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Tag color={c.is_primary ? 'green' : 'default'}>{c.is_primary ? '主要' : '联系人'}</Tag>
+                        <span style={{ fontWeight: 600 }}>{c.name}</span>
+                        <span style={{ color: '#6b7280' }}>{c.phone || '-'}</span>
+                        <span style={{ color: '#9ca3af' }}>{c.role || ''}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* 关联家电 */}
+                {currentDetail.appliances && currentDetail.appliances.length > 0 && (
+                  <>
+                    <Divider orientation="left">关联家电</Divider>
+                    <Space wrap>
+                      {currentDetail.appliances.map((a) => (
+                        <Tag key={a.id} color="blue">
+                          {a.appliance_name || `家电#${a.appliance_id}`}
+                          {a.note ? ` (${a.note})` : ''}
+                        </Tag>
+                      ))}
+                    </Space>
+                  </>
+                )}
+
+                {/* 房源图片 */}
+                {currentDetail.images && currentDetail.images.length > 0 && (
+                  <>
+                    <Divider orientation="left">房源图片 ({currentDetail.images.length})</Divider>
+                    <Image.PreviewGroup>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {currentDetail.images.map((url, i) => (
+                          <Image
+                            key={i}
+                            src={url}
+                            width={120}
+                            height={90}
+                            style={{ objectFit: 'cover', borderRadius: 6 }}
+                            placeholder={<div style={{ width: 120, height: 90, background: '#f3f4f6', borderRadius: 6 }} />}
+                          />
+                        ))}
+                      </div>
+                    </Image.PreviewGroup>
+                  </>
+                )}
+
+                {/* 视频 */}
+                {currentDetail.video_url && (
+                  <>
+                    <Divider orientation="left">
+                      <Space>
+                        <VideoCameraOutlined />
+                        视频
+                      </Space>
+                    </Divider>
+                    <video
+                      src={currentDetail.video_url}
+                      controls
+                      style={{ width: '100%', maxWidth: 600, borderRadius: 8 }}
+                    />
+                  </>
+                )}
+
+                {/* 描述 */}
+                {currentDetail.description && (
+                  <>
+                    <Divider orientation="left">房源描述</Divider>
+                    <p style={{ whiteSpace: 'pre-wrap', color: '#374151' }}>{currentDetail.description}</p>
+                  </>
+                )}
+
+                {/* 时间信息 */}
+                <Descriptions title="时间信息" column={2} size="small" bordered style={{ marginTop: 16 }}>
+                  <Descriptions.Item label="创建时间">{currentDetail.created_at}</Descriptions.Item>
+                  <Descriptions.Item label="更新时间">{currentDetail.updated_at}</Descriptions.Item>
+                </Descriptions>
+              </div>
+            )}
+          </Spin>
+        </Modal>
 
         {/* 导出进度弹窗 */}
         <Modal
