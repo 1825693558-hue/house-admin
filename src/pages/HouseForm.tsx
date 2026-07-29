@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Form, Input, InputNumber, Select, Button, Card, Space, Spin,
-  Divider, Tag, Row, Col, Checkbox, App, Upload, Image, Modal
+  Divider, Tag, Row, Col, Checkbox, App, Upload, Modal
 } from 'antd'
 import type { UploadProps, UploadFile } from 'antd'
 import {
@@ -457,38 +457,27 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
             <Form.Item name="images" noStyle>
               <Input type="hidden" />
             </Form.Item>
-            <Image.PreviewGroup>
-              {/* 隐藏的 Image 组件，用于控制弹窗预览 */}
-              <Image
-                style={{ display: 'none' }}
-                src={previewImage}
-                preview={{
-                  visible: previewVisible,
-                  onVisibleChange: (visible) => setPreviewVisible(visible),
-                }}
-              />
-              <Upload.Dragger
-                multiple
-                listType="picture-card"
-                fileList={imageFileList}
-                customRequest={handleImageUpload}
-                onChange={handleImageChange}
-                onRemove={handleImageRemove}
-                onPreview={(file) => {
-                  setPreviewImage(file.url || file.thumbUrl || '')
-                  setPreviewVisible(true)
-                }}
-                accept="image/*"
-                showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
-                style={{ marginTop: 8 }}
-              >
-                <p className="ant-upload-drag-icon">
-                  <InboxOutlined />
-                </p>
-                <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
-                <p className="ant-upload-hint">支持多图上传，上传后可预览和删除</p>
-              </Upload.Dragger>
-            </Image.PreviewGroup>
+            <Upload.Dragger
+              multiple
+              listType="picture-card"
+              fileList={imageFileList}
+              customRequest={handleImageUpload}
+              onChange={handleImageChange}
+              onRemove={handleImageRemove}
+              onPreview={(file) => {
+                setPreviewImage(file.url || file.thumbUrl || '')
+                setPreviewVisible(true)
+              }}
+              accept="image/*"
+              showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
+              style={{ marginTop: 8 }}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
+              <p className="ant-upload-hint">支持多图上传，上传后可预览和删除</p>
+            </Upload.Dragger>
           </Card>
 
           {/* ---------- 描述 ---------- */}
@@ -577,6 +566,22 @@ export default function HouseForm({ type: propType }: HouseFormProps) {
               autoPlay
             />
           )}
+        </Modal>
+
+        {/* 图片预览弹窗 */}
+        <Modal
+          open={previewVisible}
+          onCancel={() => setPreviewVisible(false)}
+          footer={null}
+          width="80%"
+          title="图片预览"
+          destroyOnClose
+        >
+          <img
+            src={previewImage}
+            alt="预览"
+            style={{ width: '100%', objectFit: 'contain' }}
+          />
         </Modal>
       </div>
     </Spin>
