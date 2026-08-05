@@ -52,6 +52,7 @@ const FONT_OPTIONS = [
   { value: '1', label: '标准' },
   { value: '1.15', label: '大' },
   { value: '1.3', label: '超大' },
+  { value: '1.5', label: '特大' },
 ]
 
 function loadFontScale(): string {
